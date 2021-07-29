@@ -263,6 +263,7 @@ struct cs_endpoint_descriptor_##dev_##iface####_##set##_##endpoint {					\
 #define USB_MIDI_IAD(if_cnt)
 #endif
 
+
 /* Declare an in jack descriptor */
 #define IN_JACK_DESCRIPTOR(jack, iface, set) 	\
 	struct cs_midi_in_jack_descriptor	in_jack_##iface##_##set##_##jack;
@@ -272,17 +273,9 @@ struct cs_endpoint_descriptor_##dev_##iface####_##set##_##endpoint {					\
 	struct cs_midi_out_jack_descriptor_##dev##_##iface##_##set##_##jack	\
 		out_jack_##iface##_##set##_##jack;
 
-#define MIDI_2_0_ENDPOINT_DESCRIPTOR(endpoint, iface, set)								\
-	struct std_ms__0_endpoint_descriptor std_ep_##iface##_##set##_##endpoint;	\
-	struct cs_as_ad_ep_descriptor cs_ep_##iface##_##set##_##endpoint;
-
 #define MIDI_1_0_ENDPOINT_DESCRIPTOR(endpoint, iface, set)								\
 	struct std_ms_1_0_endpoint_descriptor std_ep_##iface##_##set##_##endpoint;	\
 	struct cs_as_ad_ep_descriptor cs_ep_##iface##_##set##_##endpoint;
-
-#define GROUP_TERMINAL_BLOCK_DESCRIPTOR(group_terminal, iface, set)		\
-	struct cs_group_terminal_block_descriptor										\
-		group_terminal_block_##iface##_##set##_##group_terminal;
 
 /* Declare a MIDI 1.0 alternate setting descriptor */
 #define	MIDI_1_0_SETTING_DESCRIPTOR(dev, iface, set) 			\
@@ -296,6 +289,14 @@ struct cs_endpoint_descriptor_##dev_##iface####_##set##_##endpoint {					\
 		SET_N_ID(dev, iface, set), COMPAT_MIDI_ENDPOINT), 	\
 		MIDI_1_0_ENDPOINT_DESCRIPTOR, iface, set)
 
+#define MIDI_2_0_ENDPOINT_DESCRIPTOR(endpoint, iface, set)								\
+	struct std_ms__0_endpoint_descriptor std_ep_##iface##_##set##_##endpoint;	\
+	struct cs_as_ad_ep_descriptor cs_ep_##iface##_##set##_##endpoint;
+
+#define GROUP_TERMINAL_BLOCK_DESCRIPTOR(gt_block, iface, set)		\
+	struct cs_group_terminal_block_descriptor										\
+		group_terminal_block_##iface##_##set##_##gt_block;
+
 /* Declare a MIDI 2.0 alternate setting descriptor */
 #define	MIDI_2_0_SETTING_DESCRIPTOR(dev, iface, set) 			\
 	UTIL_LISTIFY_LEVEL_3(COMPAT_COUNT(								\
@@ -307,7 +308,7 @@ struct cs_endpoint_descriptor_##dev_##iface####_##set##_##endpoint {					\
 					group_terminal_block_header;))						\
 	UTIL_LISTIFY_LEVEL_3(COMPAT_COUNT(								\
 		SET_N_ID(dev, iface, set), COMPAT_MIDI_GT_BLK), 	\
-		GROUP_TERMINAL_BLOCK_DESCRIPTOR(dev, iface, set))
+		GROUP_TERMINAL_BLOCK_DESCRIPTOR, iface, set)
 
 /* Declare an alternate setting descriptor */
 #define MIDI_SETTING_DESCRIPTOR(set, dev, iface) 			\
@@ -329,7 +330,7 @@ struct cs_endpoint_descriptor_##dev_##iface####_##set##_##endpoint {					\
 	struct midi_device_descriptor_##dev {				\
 		USB_MIDI_IAD_DECLARE							\
 		struct usb_if_descriptor std_ac_interface; 		\
-		struct cs_ac_if_descriptor_##dev##_##iface cs_ac_interface;		\
+		struct cs_ac_if_descriptor_##dev cs_ac_interface;		\
 		UTIL_LISTIFY_LEVEL_1(COMPAT_COUNT(DEV_N_ID(dev), COMPAT_MIDI_INTERFACE), 	\
 			MIDI_INTERFACE_DESCRIPTOR, dev)				\
 }__packed;
@@ -348,15 +349,15 @@ struct cs_endpoint_descriptor_##dev_##iface####_##set##_##endpoint {					\
 		()\
 	)
 
-#define INIT_STD_IF(iface_subclass, iface_num, alt_set, eps_num)	\
+#define INIT_STD_AC_IF	\
 {									\
 	.bLength = sizeof(struct usb_if_descriptor),			\
 	.bDescriptorType = USB_INTERFACE_DESC,				\
-	.bInterfaceNumber = iface_num,					\
-	.bAlternateSetting = alt_set,				\
-	.bNumEndpoints = eps_num,					\
+	.bInterfaceNumber = 0x00,					\
+	.bAlternateSetting = 0x00,				\
+	.bNumEndpoints = 0,					\
 	.bInterfaceClass = AUDIO_CLASS,					\
-	.bInterfaceSubClass = iface_subclass,				\
+	.bInterfaceSubClass = USB_AUDIO_AUDIOCONTROL,				\
 	.bInterfaceProtocol = 0,					\
 	.iInterface = 0,						\
 }
@@ -378,7 +379,7 @@ struct cs_endpoint_descriptor_##dev_##iface####_##set##_##endpoint {					\
 {															\
 	.bLength = sizeof(struct std_ms_if_descriptor),			\
 	.bDescriptorType = USB_INTERFACE_DESC,					\
-	.bInterfaceNumber = iface,							\
+	.bInterfaceNumber = INCREMENT_NUM_1(iface),							\
 	.bAlternateSetting = set,							\
 	.bNumEndpoints = COMPAT_COUNT(								\
 		SET_N_ID(dev, iface, set), COMPAT_MIDI_ENDPOINT),	\
@@ -387,8 +388,6 @@ struct cs_endpoint_descriptor_##dev_##iface####_##set##_##endpoint {					\
 	.bInterfaceProtocol = 0x00,										\
 	.iInterface = 0x00,												\
 }
-
-
 
 #define INIT_CS_MS_IF(dev, iface, set)		\
 {											\
@@ -440,7 +439,7 @@ struct cs_endpoint_descriptor_##dev_##iface####_##set##_##endpoint {					\
 	.bJackID = DT_PROP(OUT_JACK_N_ID(dev, iface, set, jack), id),	\	\
 	.bNrInputPins = DT_PROP_LEN(ENDPOINT_N_ID(dev, iface, set, jack), \
 		sources),		\
-		UTIL_LISTIFY(DT_PROP_LEN(ENDPOINT_N_ID(dev, iface, set, jack), \
+		UTIL_LISTIFY_LEVEL_4(DT_PROP_LEN(ENDPOINT_N_ID(dev, iface, set, jack), \
 		sources), INIT_OUT_JACK_PIN, dev, iface, set, jack)\
 	.iJack = !!!!!!!!\
 }
@@ -552,10 +551,66 @@ struct cs_endpoint_descriptor_##dev_##iface####_##set##_##endpoint {					\
 	.bAssoc = {LISTIFY_PHANDLES_PROP(ENDPOINT_N_ID(dev, iface, set, endpoint), assoc_entities, id)},				\
 }
 
-#define INIT_EP_DATA(cb, addr)	\
-	{			\
-		.ep_cb = cb,	\
-		.ep_addr = addr,\
-	}
+#define	DEFINE_IN_JACK_DESCRIPTOR(jack, dev, iface, set) \
+	.in_jack_##iface##_##set##_##jack = INIT_CS_MIDI_IN_JACK(dev, iface, set, jack), \
+
+#define DEFINE_OUT_JACK_DESCRIPTOR(jack, dev, iface, set) \
+	.out_jack_##iface##_##set##_##jack = INIT_CS_MIDI_OUT_JACK(dev, iface, set, jack),\
+
+#define DEFINE_MIDI_1_0_ENDPOINT_DESCRIPTOR(endpoint, dev, iface, set) \
+	.std_ep_##iface##_##set##_##endpoint = INIT_STD_MS_MIDI_1_0_EP(dev, iface, set, endpoint), \
+	.cs_ep_##iface##_##set##_##endpoint = INIT_MIDI_1_0_CS_MS_EP(dev, iface, set, endpoint),\
+
+#define DEFINE_MIDI_1_0_SETTING_DESCRIPTOR(dev, iface, set) \
+	UTIL_LISTIFY_LEVEL_3(COMPAT_COUNT(								\
+		SET_N_ID(dev, iface, set), COMPAT_MIDI_IN_JACK), 	\
+		DEFINE_IN_JACK_DESCRIPTOR, dev, iface, set)					\
+	UTIL_LISTIFY_LEVEL_3(COMPAT_COUNT(								\
+		SET_N_ID(dev, iface, set), COMPAT_MIDI_OUT_JACK), 	\
+		DEFINE_OUT_JACK_DESCRIPTOR, dev, iface, set)					\
+	UTIL_LISTIFY_LEVEL_3(COMPAT_COUNT(								\
+		SET_N_ID(dev, iface, set), COMPAT_MIDI_ENDPOINT), 	\
+		DEFINE_MIDI_1_0_ENDPOINT_DESCRIPTOR, dev, iface, set)
+
+#define DEFINE_MIDI_2_0_ENDPOINT_DESCRIPTOR(endpoint, dev, iface, set)	\
+	.std_ep_##iface##_##set##_##endpoint = INIT_STD_MS_MIDI_2_0_EP(dev, iface, set, endpoint), \
+	.cs_ep_##iface##_##set##_##endpoint =  INIT_MIDI_2_0_CS_MS_EP(dev, iface, set, endpoint), \
+
+#define DEFINE_GROUP_TERMINAL_BLOCK_DESCRIPTOR(gt_block, dev, iface, set)		\
+	.group_terminal_block_##iface##_##set##_##gt_block = INIT_CS_GT_BLK(dev, iface, set, gt_blk), \
+
+#define DEFINE_MIDI_2_0_SETTING_DESCRIPTOR(dev, iface, set) \
+	UTIL_LISTIFY_LEVEL_3(COMPAT_COUNT(								\
+		SET_N_ID(dev, iface, set), COMPAT_MIDI_ENDPOINT), 	\
+		DEFINE_MIDI_2_0_ENDPOINT_DESCRIPTOR, dev, iface, set)						\
+	COND_CODE_0(COMPAT_COUNT(								\
+		SET_N_ID(dev, iface, set), COMPAT_MIDI_GT_BLK),		\
+		(), (struct cs_group_terminal_block_header_descriptor 			\
+					group_terminal_block_header;))						\
+	UTIL_LISTIFY_LEVEL_3(COMPAT_COUNT(								\
+		SET_N_ID(dev, iface, set), COMPAT_MIDI_GT_BLK), 	\
+		DEFINE_GROUP_TERMINAL_BLOCK_DESCRIPTOR, dev, iface, set)
+
+#define DEFINE_MIDI_SETTING_DESCRIPTOR(set, dev, iface)	\
+	.std_ms_interface_##iface##_##set = INIT_STD_MS_IF(dev, iface, set),	 \
+	.cs_ms_interface_##iface##_##set = INIT_CS_MS_IF(dev, iface, set), \
+	UTIL_COND_CHOICE_N(2,	\
+		PROP_VAL_IS(SET_N_ID(dev, iface, set), revision, SETTING_MIDI_1_0), \
+		PROP_VAL_IS(SET_N_ID(dev, iface, set), revision, SETTING_MIDI_2_0), \
+		(DEFINE_MIDI_1_0_SETTING_DESCRIPTOR(dev, iface, set)), \
+		(DEFINE_MIDI_2_0_SETTING_DESCRIPTOR(dev, iface, set)))
+
+#define DEFINE_MIDI_INTERFACE_DESCRIPTOR(iface, dev)	\
+	UTIL_LISTIFY_LEVEL_2(COMPAT_COUNT(IFACE_N_ID(dev, iface), COMPAT_MIDI_SETTING), 			\
+		DEFINE_MIDI_SETTING_DESCRIPTOR, dev, iface)
+
+#define DEFINE_MIDI_DESCRIPTOR(dev)	\
+	USBD_CLASS_DESCR_DEFINE(primary, midi)	\
+	struct midi_device_descriptor_##dev midi_device_##dev = { \
+		USB_MIDI_IAD(COMPAT_COUNT(DEV_N_ID(dev), COMPAT_MIDI_INTERFACE) + 1)	\
+		.std_ac_interface = INIT_STD_AC_IF, \
+		.cs_ac_interface = INIT_CS_AC_IF(dev),\
+		UTIL_LISTIFY_LEVEL_1(COMPAT_COUNT(DEV_N_ID(dev), COMPAT_MIDI_INTERFACE), 	\
+			DEFINE_MIDI_INTERFACE_DESCRIPTOR, dev)	
 
 #endif /* ZEPHYR_INCLUDE_USB_CLASS_MIDI_INTERNAL_H_ */
