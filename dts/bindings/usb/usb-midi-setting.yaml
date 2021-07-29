@@ -1,0 +1,20 @@
+# Copyright (c) 2020 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+# Specific fields for USB MIDI device.
+
+description: USB MIDI setting.
+
+compatible: "usb-midi-setting"
+
+properties:
+  revision:
+    type: string
+    required: true
+    description: Revision of the specification
+    enum:
+      - "MIDI 1.0"
+      - "MIDI 2.0"
+
+
+

@@ -1,0 +1,28 @@
+# Copyright (c) 2020 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+# Specific fields for USB MIDI IN jack.
+
+description: USB MIDI IN jack.
+
+compatible: "usb-midi-in-jack"
+
+properties:
+  type:
+    type: string
+    required: true
+    description: type of the MIDI IN jack, embedded or external
+    enum:
+           - "EMBEDDED"
+           - "EXTERNAL"
+
+  id:
+    type: int
+    required: true
+    description: ID of the MIDI IN jack
+
+  string:
+    type: string
+    required: false
+    description: String describing the MIDI IN Jack
+

@@ -1,7 +1,6 @@
 
-if (CONFIG_BT)
-  add_subdirectory(bluetooth)
-endif()
 
+add_subdirectory_ifdef(CONFIG_BT    bluetooth)
+add_subdirectory_ifdef(CONFIG_USB   usb)
 
 

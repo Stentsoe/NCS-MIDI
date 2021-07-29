@@ -1,0 +1,65 @@
+# Copyright (c) 2020 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+# Specific fields for USB MIDI OUT jack.
+
+description: USB MIDI endpoint.
+
+compatible: "usb-midi-group-terminal-block"
+
+properties:
+  id:
+    type: int
+    required: true
+    description: ID of the group terminal block.
+
+  type:
+    type: string
+    required: true
+    description: Declare whether group terminals of the block is declared as IN, OUT or IN/OUT
+    enum:
+        - "OUT"
+        - "IN"
+        - "IN-OUT"
+
+  group-terminal:
+    type: int
+    required: false
+    default: 0
+    description: Number of the first group terminal in this block.
+
+  num-group-terminals:
+    type: int
+    required: false
+    default: 1
+    description: Number of group terminals spanned by this block.
+
+  protocol:
+    type: string
+    required: false
+    description: Sets whether group terminals use MIDI 1.0 or MIDI 2.0.
+    enum: 
+      - "UNKNOWN"
+      - "MIDI_1_0_64"
+      - "MIDI_1_0_64_TIMESTAMPS"
+      - "MIDI_1_0_128"
+      - "MIDI_1_0_128_TIMESTAMPS"
+      - "MIDI_2_0"
+      - "MIDI_2_0_TIMESTAMPS"
+
+  in-bandwidth:
+    type: int
+    required: false
+    default: 0
+    description: Sets Maximum input bandwidth for IN group terminals in 4KB/s. 0 = unknown or not fixed, 1 = ~31.25kb/s
+
+  out-bandwidth:
+    type: int
+    required: false
+    default: 0
+    description: Sets Maximum input bandwidth for OUT group terminals in 4KB/s. 0 = unknown or not fixed, 1 = ~31.25kb/s
+
+  string:
+    type: string
+    required: false
+    description: String describing the group terminal block

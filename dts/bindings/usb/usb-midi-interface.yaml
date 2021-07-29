@@ -1,0 +1,11 @@
+# Copyright (c) 2020 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+# Specific fields for USB MIDI interface.
+
+description: USB MIDI.
+
+compatible: "usb-midi-interface"
+
+
+
