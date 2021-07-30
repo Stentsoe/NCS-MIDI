@@ -43,168 +43,26 @@ enum usb_audio_cs_ac_int_desc_subtypes {
 
 enum usb_midi_cs_desc_types	{
 	USB_CS_GR_TRM_BLOCK = 0x26
-}
+};
 
 enum usb_midi_cs_int_desc_subtypes {
 	USB_MS_DESCRIPTOR_UNDEFINED	= 0x00,
 	USB_MS_HEADER	= 0x01,
 	USB_MIDI_IN_JACK = 0x02,
 	USB_MIDI_OUT_JACK = 0x03
-}
+};
 
 enum usb_midi_cs_ep_desc_subtypes {
 	USB_DESCRIPTOR_UNDEFINED = 0x00,
 	USB_MS_GENERAL = 0x01,
 	USB_MS_GENERAL_2_0	= 0x02
-}
+};
 
 enum usb_midi_cs_gt_block_desc_subtypes	{
 	USB_GR_TRM_BLOCK_UNDEFINED = 0x00,
 	USB_GR_TRM_BLOCK_HEADER = 0x01,
 	USB_GR_TRM_BLOCK = 0x02
-}
-
-/** Audio Class-Specific Request Codes
- * Refer to Table A-9 from audio10.pdf
- */
-enum usb_audio_cs_req_codes {
-	USB_AUDIO_REQUEST_CODE_UNDEFINED	= 0x00,
-	USB_AUDIO_SET_CUR			= 0x01,
-	USB_AUDIO_GET_CUR			= 0x81,
-	USB_AUDIO_SET_MIN			= 0x02,
-	USB_AUDIO_GET_MIN			= 0x82,
-	USB_AUDIO_SET_MAX			= 0x03,
-	USB_AUDIO_GET_MAX			= 0x83,
-	USB_AUDIO_SET_RES			= 0x04,
-	USB_AUDIO_GET_RES			= 0x84,
-	USB_AUDIO_SET_MEM			= 0x05,
-	USB_AUDIO_GET_MEM			= 0x85,
-	USB_AUDIO_GET_STAT			= 0xFF
 };
-
-/** Feature Unit Control Selectors
- * Refer to Table A-11 from audio10.pdf
- */
-enum usb_audio_fucs {
-	USB_AUDIO_FU_CONTROL_UNDEFINED		= 0x00,
-	USB_AUDIO_FU_MUTE_CONTROL		= 0x01,
-	USB_AUDIO_FU_VOLUME_CONTROL		= 0x02,
-	USB_AUDIO_FU_BASS_CONTROL		= 0x03,
-	USB_AUDIO_FU_MID_CONTROL		= 0x04,
-	USB_AUDIO_FU_TREBLE_CONTROL		= 0x05,
-	USB_AUDIO_FU_GRAPHIC_EQUALIZER_CONTROL	= 0x06,
-	USB_AUDIO_FU_AUTOMATIC_GAIN_CONTROL	= 0x07,
-	USB_AUDIO_FU_DELAY_CONTROL		= 0x08,
-	USB_AUDIO_FU_BASS_BOOST_CONTROL		= 0x09,
-	USB_AUDIO_FU_LOUDNESS_CONTROL		= 0x0A
-};
-
-/** USB Terminal Types
- * Refer to Table 2-1 - Table 2-4 from termt10.pdf
- */
-enum usb_audio_terminal_types {
-	/* USB Terminal Types */
-	USB_AUDIO_USB_UNDEFINED   = 0x0100,
-	USB_AUDIO_USB_STREAMING   = 0x0101,
-	USB_AUDIO_USB_VENDOR_SPEC = 0x01FF,
-
-	/* Input Terminal Types */
-	USB_AUDIO_IN_UNDEFINED      = 0x0200,
-	USB_AUDIO_IN_MICROPHONE     = 0x0201,
-	USB_AUDIO_IN_DESKTOP_MIC    = 0x0202,
-	USB_AUDIO_IN_PERSONAL_MIC   = 0x0203,
-	USB_AUDIO_IN_OM_DIR_MIC     = 0x0204,
-	USB_AUDIO_IN_MIC_ARRAY      = 0x0205,
-	USB_AUDIO_IN_PROC_MIC_ARRAY = 0x0205,
-
-	/* Output Terminal Types */
-	USB_AUDIO_OUT_UNDEFINED		= 0x0300,
-	USB_AUDIO_OUT_SPEAKER		= 0x0301,
-	USB_AUDIO_OUT_HEADPHONES	= 0x0302,
-	USB_AUDIO_OUT_HEAD_AUDIO	= 0x0303,
-	USB_AUDIO_OUT_DESKTOP_SPEAKER	= 0x0304,
-	USB_AUDIO_OUT_ROOM_SPEAKER	= 0x0305,
-	USB_AUDIO_OUT_COMM_SPEAKER	= 0x0306,
-	USB_AUDIO_OUT_LOW_FREQ_SPEAKER	= 0x0307,
-
-	/* Bi-directional Terminal Types */
-	USB_AUDIO_IO_UNDEFINED			= 0x0400,
-	USB_AUDIO_IO_HANDSET			= 0x0401,
-	USB_AUDIO_IO_HEADSET			= 0x0402,
-	USB_AUDIO_IO_SPEAKERPHONE_ECHO_NONE	= 0x0403,
-	USB_AUDIO_IO_SPEAKERPHONE_ECHO_SUP	= 0x0404,
-	USB_AUDIO_IO_SPEAKERPHONE_ECHO_CAN	= 0x0405,
-};
-
-enum usb_audio_direction {
-	USB_AUDIO_IN = 0x00,
-	USB_AUDIO_OUT = 0x01
-};
-
-/**
- * @brief Feature Unit event structure.
- *
- * The event structure is used by feature_update_cb in order to inform the App
- * whenever the Host has modified one of the device features.
- *
- * @param dir	  The device direction that has been changed. Applicable for
- *		  Headset device only.
- * @param cs	  Control selector, feature that has been changed.
- * @param channel Device channel that has been changed. If 0xFF, then
- *		  all channels have been changed.
- * @param val_len Length of the val field.
- * @param val	  Value of the feature that has been set.
- */
-struct usb_audio_fu_evt {
-	enum usb_audio_direction dir;
-	enum usb_audio_fucs cs;
-	uint8_t channel;
-	uint8_t val_len;
-	const void *val;
-};
-
-/**
- * @brief Callback type used to inform the app that data were requested
- *	  from the device and may be send to the Host.
- *	  For sending the data usb_audio_send() API function should be used.
- *
- * @note User may not use this callback and may try to send in 1ms task
- *	 instead. Sending every 1ms may be unsuccessful and may return -EAGAIN
- *	 if Host did not required data.
- *
- * @param dev The device for which data were requested by the Host.
- */
-typedef void (*usb_audio_data_request_cb_t)(const struct device *dev);
-
-/**
- * @brief Callback type used to inform the app that data were successfully
- *	  send/received.
- *
- * @param dev	 The device for which the callback was called.
- * @param buffer Pointer to the net_buf data chunk that was successfully
- *		 send/received. If the application uses data_written_cb and/or
- *		 data_received_cb callbacks it is responsible for freeing the
- *		 buffer by itself.
- * @param size	 Amount of data that were successfully send/received.
- */
-typedef void (*usb_audio_data_completion_cb_t)(const struct device *dev,
-					       struct net_buf *buffer,
-					       size_t size);
-
-/**
- * @brief Callback type used to inform the app that Host has changed
- *	  one of the features configured for the device.
- *	  Applicable for all devices.
- *
- * @warning Host may not use all of configured features.
- *
- * @param dev USB Audio device
- * @param evt Pointer to an event to be parsed by the App.
- *	      Pointer sturct is temporary and is valid only during the
- *	      execution of this callback.
- */
-typedef void (*usb_audio_feature_updated_cb_t)(const struct device *dev,
-					       const struct usb_audio_fu_evt *evt);
 
 /**
  * @brief Audio callbacks used to interact with audio devices by user App.
@@ -216,76 +74,10 @@ typedef void (*usb_audio_feature_updated_cb_t)(const struct device *dev,
  * device work as expected sending/receiving data. For more information refer
  * to callback documentation above.
  */
-struct usb_audio_ops {
-	/* Callback called when data could be send */
-	usb_audio_data_request_cb_t data_request_cb;
+struct usb_midi_ops {
+	/* Callbacks */
 
-	/* Callback called when data were successfully written with sending
-	 * capable device. Applicable for headset and microphone. Unused for
-	 * headphones.
-	 */
-	usb_audio_data_completion_cb_t data_written_cb;
-
-	/* Callback called when data were successfully received by receive
-	 * capable device. Applicable for headset and headphones. Unused for
-	 * microphone.
-	 */
-	usb_audio_data_completion_cb_t data_received_cb;
-
-	/* Callback called when features were modified by the Host */
-	usb_audio_feature_updated_cb_t feature_update_cb;
 };
-
-/** @brief Get the frame size that is accepted by the Host.
- *
- * This function returns the frame size for Input Devices that is expected
- * by the Host. Returned value rely on Input Device configuration:
- * - number of channels
- * - sampling frequency
- * - sample resolution
- * Device configuration is done via DT overlay.
- *
- * @param dev The Input device that is asked for frame size.
- *
- * @warning Do not use with OUT only devices (Headphones).
- *	    For OUT only devices this function shall return 0.
- */
-size_t usb_audio_get_in_frame_size(const struct device *dev);
-
-/**
- * @brief Register the USB Audio device and make it useable.
- *	  This must be called in order to make the device work
- *	  and respond to all relevant requests.
- *
- * @param dev USB Audio device
- * @param ops USB audio callback structure. Callback are used to
- *	      inform the user about what is happening
- */
-void usb_audio_register(const struct device *dev,
-			const struct usb_audio_ops *ops);
-
-/**
- * @brief Send data using USB Audio device
- *
- * @param dev    USB Audio device which will send the data
- *		 over its ISO IN endpoint
- * @param buffer Pointer to the buffer that should be send. User is
- *		 responsible for managing the buffer for Input devices. In case
- *		 of sending error user must decide if the buffer should be
- *		 dropped or retransmitted.
- *		 Afther the buffer was sent successfully it is passed to the
- *		 data_written_cb callback if the application uses one or
- *		 automatically freed otherwse.
- *		 User must provide proper net_buf chunk especially when
- *		 it comes to its size. This information can be obtained
- *		 using usb_audio_get_in_frame_size() API function.
- *
- * @param len    Length of the data to be send
- *
- * @return 0 on success, negative error on fail
- */
-int usb_audio_send(const struct device *dev, struct net_buf *buffer,
-		   size_t len);
 
 
 void test_func(void);

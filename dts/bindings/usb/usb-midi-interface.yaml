@@ -7,5 +7,9 @@ description: USB MIDI.
 
 compatible: "usb-midi-interface"
 
-
+properties:
+  index:
+    type: int
+    required: true
+    description: index of this interface
 

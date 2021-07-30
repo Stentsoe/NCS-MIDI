@@ -322,7 +322,7 @@ extern "C" {
 	UTIL_COND_CHOICE_4(C1, C2, C3, C4, R1, R2, R3, R4)	\
 	COND_CODE_1(C5,	R5, ())
 
-#define UTIL_COND_CHOICE_6(C1, C2, C3, C4, C5, C7, R1, R2, R3, R4, R5, R6)	\
+#define UTIL_COND_CHOICE_6(C1, C2, C3, C4, C5, C6, R1, R2, R3, R4, R5, R6)	\
 	UTIL_COND_CHOICE_5(C1, C2, C3, C4, C5, R1, R2, R3, R4, R5)	\
 	COND_CODE_1(C6,	R6, ())
 
@@ -330,7 +330,9 @@ extern "C" {
 	UTIL_COND_CHOICE_6(C1, C2, C3, C4, C5, C6, R1, R2, R3, R4, R5, R6)	\
 	COND_CODE_1(C7,	R7, ())
 
-
+#define UTIL_COND_CHOICE_8(C1, C2, C3, C4, C5, C6, C7, C8, R1, R2, R3, R4, R5, R6, R7, R8)	\
+	UTIL_COND_CHOICE_7(C1, C2, C3, C4, C5, C6, C7, R1, R2, R3, R4, R5, R6, R7)	\
+	COND_CODE_1(C8,	R8, ())
 
 #ifdef __cplusplus
 }

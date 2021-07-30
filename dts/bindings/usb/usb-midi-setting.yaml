@@ -16,5 +16,11 @@ properties:
       - "MIDI 1.0"
       - "MIDI 2.0"
 
+  
+  index:
+    type: int
+    required: true
+    description: index of this setting
+
 
 

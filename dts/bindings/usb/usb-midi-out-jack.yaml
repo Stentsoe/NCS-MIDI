@@ -26,7 +26,7 @@ properties:
     description: Pointers to the in jack of wich the jack is connected.
 
   sources-pins:
-    type: int-array
+    type: uint8-array
     required: false
     description: Pin number of connected source entities. Number of pins must match number of sources.
 
