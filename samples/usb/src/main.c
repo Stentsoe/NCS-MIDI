@@ -15,8 +15,34 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define RUN_STATUS_LED DK_LED1
 #define RUN_LED_BLINK_INTERVAL 1000
 
+static const struct usb_midi_ops ops = {
+};
+
 void main(void)
 {
+
+	const struct device *midi_dev;
+	int ret;
+
+	// LOG_INF("Entered %s", __func__);
+	midi_dev = device_get_binding("MIDI");
+
+	if (!midi_dev) {
+		LOG_ERR("Can not get USB MIDI Device");
+		// return;
+	}
+
+	// LOG_INF("Found USB MIDI Device");
+
+	usb_midi_register(midi_dev, &ops);
+	
+	ret = usb_enable(NULL);
+	if (ret != 0) {
+		LOG_ERR("Failed to enable USB");
+		return;
+	}
+
+	LOG_INF("USB enabled");
 	int blink_status = 0;
 	int err;
 

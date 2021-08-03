@@ -44,18 +44,19 @@ extern "C" {
 #define UTIL_LISTIFY_LEVEL_2(LEN, F, ...) UTIL_CAT(Z_UTIL_LISTIFY_2_, LEN)(F, __VA_ARGS__)
 #define UTIL_LISTIFY_LEVEL_3(LEN, F, ...) UTIL_CAT(Z_UTIL_LISTIFY_3_, LEN)(F, __VA_ARGS__)
 #define UTIL_LISTIFY_LEVEL_4(LEN, F, ...) UTIL_CAT(Z_UTIL_LISTIFY_4_, LEN)(F, __VA_ARGS__)
+#define UTIL_LISTIFY_LEVEL_5(LEN, F, ...) UTIL_CAT(Z_UTIL_LISTIFY_5_, LEN)(F, __VA_ARGS__)
 
 /** 
  * @brief Increment a number by one
  */
 #define	INCREMENT_NUM_1(num)	\
-	NUM_VA_ARGS_LESS_1(UTIL_LISTIFY(num, LIST),)
+	NUM_VA_ARGS_LESS_1(UTIL_LISTIFY_LEVEL_4(num, LIST),)
 
 /** 
  * @brief Decrement a number by one
  */
 #define	DECREMENT_NUM_1(num)	\
-	NUM_VA_ARGS_LESS_1(LIST_DROP_EMPTY(UTIL_LISTIFY(num, LIST)))
+	NUM_VA_ARGS_LESS_1(LIST_DROP_EMPTY(UTIL_LISTIFY_LEVEL_4(num, LIST)))
 
 /** 
  * @brief Check if a number i is equal to N. N has to be 16 or lower.

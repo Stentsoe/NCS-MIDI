@@ -1,5 +1,5 @@
 /*
- * USB audio class core header
+ * USB midi class core header
  *
  * Copyright (c) 2020 Nordic Semiconductor ASA
  *
@@ -78,6 +78,18 @@ struct usb_midi_ops {
 	/* Callbacks */
 
 };
+
+/**
+ * @brief Register the USB Audio device and make it useable.
+ *	  This must be called in order to make the device work
+ *	  and respond to all relevant requests.
+ *
+ * @param dev USB Audio device
+ * @param ops USB audio callback structure. Callback are used to
+ *	      inform the user about what is happening
+ */
+void usb_midi_register(const struct device *dev,
+			const struct usb_midi_ops *ops);
 
 
 void test_func(void);

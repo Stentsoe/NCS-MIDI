@@ -7,5 +7,18 @@ description: USB MIDI.
 
 compatible: "usb-midi-device"
 
+properties:
+  label:
+    required: true
+    type: string
+    description: Human readable string describing the device (used as device_get_binding() argument)
 
+  in_eps:
+    type: uint8-array
+    required: false
+    description: Out endpoints that belong to this device.
 
+  out_eps:
+    type: uint8-array
+    required: false
+    description: Out endpoints that belong to this device.

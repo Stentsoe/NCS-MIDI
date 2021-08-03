@@ -50,59 +50,59 @@ extern "C" {
 
 #define Z_UTIL_LISTIFY_1_3(F, ...) \
 	Z_UTIL_LISTIFY_1_2(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(2, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_1_4(F, ...) \
 	Z_UTIL_LISTIFY_1_3(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(3, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_1_5(F, ...) \
 	Z_UTIL_LISTIFY_1_4(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(4, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_1_6(F, ...) \
 	Z_UTIL_LISTIFY_1_5(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(5, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_1_7(F, ...) \
 	Z_UTIL_LISTIFY_1_6(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(6, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_1_8(F, ...) \
 	Z_UTIL_LISTIFY_1_7(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(7, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_1_9(F, ...) \
 	Z_UTIL_LISTIFY_1_8(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(8, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_1_10(F, ...) \
 	Z_UTIL_LISTIFY_1_9(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(9, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_1_11(F, ...) \
 	Z_UTIL_LISTIFY_1_10(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(10, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_1_12(F, ...) \
 	Z_UTIL_LISTIFY_1_11(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(11, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_1_13(F, ...) \
 	Z_UTIL_LISTIFY_1_12(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(12, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_1_14(F, ...) \
 	Z_UTIL_LISTIFY_1_13(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(13, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_1_15(F, ...) \
 	Z_UTIL_LISTIFY_1_14(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(14, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_1_16(F, ...) \
 	Z_UTIL_LISTIFY_1_15(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(15, __VA_ARGS__)
 
 /* Set of UTIL_LISTIFY particles for nesting level 2 */
 #define Z_UTIL_LISTIFY_2_0(F, ...)
@@ -116,59 +116,59 @@ extern "C" {
 
 #define Z_UTIL_LISTIFY_2_3(F, ...) \
 	Z_UTIL_LISTIFY_2_2(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(2, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_2_4(F, ...) \
 	Z_UTIL_LISTIFY_2_3(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(3, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_2_5(F, ...) \
 	Z_UTIL_LISTIFY_2_4(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(4, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_2_6(F, ...) \
 	Z_UTIL_LISTIFY_2_5(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(5, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_2_7(F, ...) \
 	Z_UTIL_LISTIFY_2_6(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(6, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_2_8(F, ...) \
 	Z_UTIL_LISTIFY_2_7(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(7, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_2_9(F, ...) \
 	Z_UTIL_LISTIFY_2_8(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(8, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_2_10(F, ...) \
 	Z_UTIL_LISTIFY_2_9(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(9, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_2_11(F, ...) \
 	Z_UTIL_LISTIFY_2_10(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(10, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_2_12(F, ...) \
 	Z_UTIL_LISTIFY_2_11(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(11, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_2_13(F, ...) \
 	Z_UTIL_LISTIFY_2_12(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(12, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_2_14(F, ...) \
 	Z_UTIL_LISTIFY_2_13(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(13, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_2_15(F, ...) \
 	Z_UTIL_LISTIFY_2_14(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(14, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_2_16(F, ...) \
 	Z_UTIL_LISTIFY_2_15(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(15, __VA_ARGS__)
 
 
 /* Set of UTIL_LISTIFY particles for nesting level 1 */
@@ -183,59 +183,59 @@ extern "C" {
 
 #define Z_UTIL_LISTIFY_3_3(F, ...) \
 	Z_UTIL_LISTIFY_3_2(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(2, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_3_4(F, ...) \
 	Z_UTIL_LISTIFY_3_3(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(3, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_3_5(F, ...) \
 	Z_UTIL_LISTIFY_3_4(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(4, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_3_6(F, ...) \
 	Z_UTIL_LISTIFY_3_5(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(5, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_3_7(F, ...) \
 	Z_UTIL_LISTIFY_3_6(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(6, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_3_8(F, ...) \
 	Z_UTIL_LISTIFY_3_7(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(7, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_3_9(F, ...) \
 	Z_UTIL_LISTIFY_3_8(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(8, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_3_10(F, ...) \
 	Z_UTIL_LISTIFY_3_9(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(9, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_3_11(F, ...) \
 	Z_UTIL_LISTIFY_3_10(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(10, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_3_12(F, ...) \
 	Z_UTIL_LISTIFY_3_11(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(11, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_3_13(F, ...) \
 	Z_UTIL_LISTIFY_3_12(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(12, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_3_14(F, ...) \
 	Z_UTIL_LISTIFY_3_13(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(13, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_3_15(F, ...) \
 	Z_UTIL_LISTIFY_3_14(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(14, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_3_16(F, ...) \
 	Z_UTIL_LISTIFY_3_15(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(15, __VA_ARGS__)
 
 
 /* Set of UTIL_LISTIFY particles for nesting level 1 */
@@ -250,61 +250,125 @@ extern "C" {
 
 #define Z_UTIL_LISTIFY_4_3(F, ...) \
 	Z_UTIL_LISTIFY_4_2(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(2, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_4_4(F, ...) \
 	Z_UTIL_LISTIFY_4_3(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(3, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_4_5(F, ...) \
 	Z_UTIL_LISTIFY_4_4(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(4, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_4_6(F, ...) \
 	Z_UTIL_LISTIFY_4_5(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(5, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_4_7(F, ...) \
 	Z_UTIL_LISTIFY_4_6(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(6, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_4_8(F, ...) \
 	Z_UTIL_LISTIFY_4_7(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(7, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_4_9(F, ...) \
 	Z_UTIL_LISTIFY_4_8(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(8, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_4_10(F, ...) \
 	Z_UTIL_LISTIFY_4_9(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(9, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_4_11(F, ...) \
 	Z_UTIL_LISTIFY_4_10(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(10, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_4_12(F, ...) \
 	Z_UTIL_LISTIFY_4_11(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(11, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_4_13(F, ...) \
 	Z_UTIL_LISTIFY_4_12(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(12, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_4_14(F, ...) \
 	Z_UTIL_LISTIFY_4_13(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(13, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_4_15(F, ...) \
 	Z_UTIL_LISTIFY_4_14(F, __VA_ARGS__) \
-	F(1, __VA_ARGS__)
+	F(14, __VA_ARGS__)
 
 #define Z_UTIL_LISTIFY_4_16(F, ...) \
 	Z_UTIL_LISTIFY_4_15(F, __VA_ARGS__) \
+	F(15, __VA_ARGS__)
+
+/* Set of UTIL_LISTIFY particles for nesting level 1 */
+#define Z_UTIL_LISTIFY_5_0(F, ...)
+
+#define Z_UTIL_LISTIFY_5_1(F, ...) \
+	F(0, __VA_ARGS__)
+
+#define Z_UTIL_LISTIFY_5_2(F, ...) \
+	Z_UTIL_LISTIFY_5_1(F, __VA_ARGS__) \
 	F(1, __VA_ARGS__)
 
+#define Z_UTIL_LISTIFY_5_3(F, ...) \
+	Z_UTIL_LISTIFY_5_2(F, __VA_ARGS__) \
+	F(2, __VA_ARGS__)
 
+#define Z_UTIL_LISTIFY_5_4(F, ...) \
+	Z_UTIL_LISTIFY_5_3(F, __VA_ARGS__) \
+	F(3, __VA_ARGS__)
+
+#define Z_UTIL_LISTIFY_5_5(F, ...) \
+	Z_UTIL_LISTIFY_5_4(F, __VA_ARGS__) \
+	F(4, __VA_ARGS__)
+
+#define Z_UTIL_LISTIFY_5_6(F, ...) \
+	Z_UTIL_LISTIFY_5_5(F, __VA_ARGS__) \
+	F(5, __VA_ARGS__)
+
+#define Z_UTIL_LISTIFY_5_7(F, ...) \
+	Z_UTIL_LISTIFY_5_6(F, __VA_ARGS__) \
+	F(6, __VA_ARGS__)
+
+#define Z_UTIL_LISTIFY_5_8(F, ...) \
+	Z_UTIL_LISTIFY_5_7(F, __VA_ARGS__) \
+	F(7, __VA_ARGS__)
+
+#define Z_UTIL_LISTIFY_5_9(F, ...) \
+	Z_UTIL_LISTIFY_5_8(F, __VA_ARGS__) \
+	F(8, __VA_ARGS__)
+
+#define Z_UTIL_LISTIFY_5_10(F, ...) \
+	Z_UTIL_LISTIFY_5_9(F, __VA_ARGS__) \
+	F(9, __VA_ARGS__)
+
+#define Z_UTIL_LISTIFY_5_11(F, ...) \
+	Z_UTIL_LISTIFY_5_10(F, __VA_ARGS__) \
+	F(10, __VA_ARGS__)
+
+#define Z_UTIL_LISTIFY_5_12(F, ...) \
+	Z_UTIL_LISTIFY_5_11(F, __VA_ARGS__) \
+	F(11, __VA_ARGS__)
+
+#define Z_UTIL_LISTIFY_5_13(F, ...) \
+	Z_UTIL_LISTIFY_5_12(F, __VA_ARGS__) \
+	F(12, __VA_ARGS__)
+
+#define Z_UTIL_LISTIFY_5_14(F, ...) \
+	Z_UTIL_LISTIFY_5_13(F, __VA_ARGS__) \
+	F(13, __VA_ARGS__)
+
+#define Z_UTIL_LISTIFY_5_15(F, ...) \
+	Z_UTIL_LISTIFY_5_14(F, __VA_ARGS__) \
+	F(14, __VA_ARGS__)
+
+#define Z_UTIL_LISTIFY_5_16(F, ...) \
+	Z_UTIL_LISTIFY_5_15(F, __VA_ARGS__) \
+	F(15, __VA_ARGS__)
 
 #define UTIL_COND_CHOICE_2(C1, C2, R1, R2)		\
 	COND_CODE_1(C1,	R1, ())				\

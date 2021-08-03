@@ -7,6 +7,9 @@
 &usbd {
 	midi_device {
 		compatible = "usb-midi-device";
+		label = "MIDI";
+		// in_eps = [01 02 03 04 05];
+		// out_eps = [01];
 
 		midi_interface_1 {
 			compatible = "usb-midi-interface";
@@ -44,7 +47,7 @@
 					id = <4>;
 				};
 		
-				endpoint_out_1 {
+				ep_out_1: endpoint_out_1 {
 					compatible = "usb-midi-endpoint";
 					direction = "OUT";
 					type = "BULK";
@@ -53,7 +56,7 @@
 					
 				};
 		
-				endpoint_in_1 {
+				ep_in_1: endpoint_in_1 {
 					compatible = "usb-midi-endpoint";
 					direction = "IN";
 					type = "BULK";
@@ -66,7 +69,8 @@
 				compatible = "usb-midi-setting";
 				revision = "MIDI 2.0";
 				index = <1>;
-				endpoint_out_2 {
+
+				ep_out_2: endpoint_out_2 {
 					compatible = "usb-midi-endpoint";
 					direction = "OUT";
 					type = "BULK";
@@ -75,7 +79,7 @@
 					
 				};
 		
-				endpoint_in_2 {
+				ep_in_2: endpoint_in_2 {
 					compatible = "usb-midi-endpoint";
 					direction = "IN";
 					type = "INTERRUPT";
