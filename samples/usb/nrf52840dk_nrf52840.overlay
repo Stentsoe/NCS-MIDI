@@ -8,8 +8,6 @@
 	midi_device {
 		compatible = "usb-midi-device";
 		label = "MIDI";
-		// in_eps = [01 02 03 04 05];
-		// out_eps = [01];
 
 		midi_interface_1 {
 			compatible = "usb-midi-interface";

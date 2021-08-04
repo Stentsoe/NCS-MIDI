@@ -42,7 +42,7 @@ void main(void)
 		return;
 	}
 
-	LOG_INF("USB enabled");
+	// LOG_INF("USB enabled");
 	int blink_status = 0;
 	int err;
 

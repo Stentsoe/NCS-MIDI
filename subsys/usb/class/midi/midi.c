@@ -57,10 +57,7 @@ static void midi_interface_config(struct usb_desc_header *head,
 	iad->bFirstInterface = bInterfaceNumber;
 #endif
 
-	/* Audio Control Interface */
-	iface->bInterfaceNumber = bInterfaceNumber;
-	header = (struct cs_ac_if_descriptor *)
-		 ((uint8_t *)iface + iface->bLength);
+	LOG_INF("if config");
 
 	
 }
@@ -68,7 +65,46 @@ static void midi_interface_config(struct usb_desc_header *head,
 static void midi_cb_usb_status(struct usb_cfg_data *cfg,
 			 enum usb_dc_status_code cb_status,
 			 const uint8_t *param)
-{	
+{
+	switch (cb_status)
+	{
+	case USB_DC_ERROR:
+		LOG_INF("USB_DC_ERROR");
+		break;
+	case USB_DC_RESET:
+		LOG_INF("USB_DC_RESET");
+		break;
+	case USB_DC_CONNECTED:
+		LOG_INF("USB_DC_CONNECTED");
+		break;
+	case USB_DC_CONFIGURED:
+		LOG_INF("USB_DC_CONFIGURED");
+		break;
+	case USB_DC_DISCONNECTED:
+		LOG_INF("USB_DC_DISCONNECTED");
+		break;
+	case USB_DC_SUSPEND:
+		LOG_INF("USB_DC_SUSPEND");
+		break;
+	case USB_DC_RESUME:
+		LOG_INF("USB_DC_RESUME");
+		break;
+	case USB_DC_INTERFACE:
+		LOG_INF("USB_DC_INTERFACE");
+		break;
+	case USB_DC_SET_HALT:
+		LOG_INF("USB_DC_SET_HALT");
+		break;
+	case USB_DC_CLEAR_HALT:
+		LOG_INF("USB_DC_CLEAR_HALT");
+		break;
+	case USB_DC_SOF:
+		LOG_INF("USB_DC_SOF");
+		break;
+	
+	default:
+		break;
+	}	
 }
 
 // /**
@@ -166,25 +202,26 @@ static void midi_cb_usb_status(struct usb_cfg_data *cfg,
 // {
 // }
 
-// /**
-//  * @brief Handler called for class specific interface request.
-//  *
-//  * This function handles all class specific interface requests to a usb midi
-//  * device. If request is properly server then 0 is returned. Returning negative
-//  * value will lead to set stall on IN EP0.
-//  *
-//  * @param pSetup    Information about the executed request.
-//  * @param len       Size of the buffer.
-//  * @param data      Buffer containing the request result.
-//  *
-//  * @return  0 on success, negative errno code on fail.
-//  */
-// static int handle_interface_req(struct usb_setup_packet *pSetup,
-// 				int32_t *len,
-// 				uint8_t **data)
-// {
+/**
+ * @brief Handler called for class specific interface request.
+ *
+ * This function handles all class specific interface requests to a usb midi
+ * device. If request is properly server then 0 is returned. Returning negative
+ * value will lead to set stall on IN EP0.
+ *
+ * @param pSetup    Information about the executed request.
+ * @param len       Size of the buffer.
+ * @param data      Buffer containing the request result.
+ *
+ * @return  0 on success, negative errno code on fail.
+ */
+static int handle_interface_req(struct usb_setup_packet *pSetup,
+				int32_t *len,
+				uint8_t **data)
+{
 	
-// }
+	LOG_INF("req: %d", pSetup->bmRequestType);
+}
 
 /**
  * @brief Custom callback for USB Device requests.
@@ -204,6 +241,9 @@ static void midi_cb_usb_status(struct usb_cfg_data *cfg,
 static int midi_custom_handler(struct usb_setup_packet *pSetup, int32_t *len,
 				uint8_t **data)
 {
+	LOG_INF("bmRT 0x%02x, bR 0x%02x, wV 0x%04x, wI 0x%04x, wL 0x%04x",
+		pSetup->bmRequestType, pSetup->bRequest, pSetup->wValue,
+		pSetup->wIndex, pSetup->wLength);	
 }
 
 /**
@@ -217,7 +257,11 @@ static int midi_custom_handler(struct usb_setup_packet *pSetup, int32_t *len,
  */
 static int midi_class_handle_req(struct usb_setup_packet *pSetup,
 				  int32_t *len, uint8_t **data)
-{	
+{
+	LOG_INF("midi_class_handle_req");
+	LOG_DBG("bmRT 0x%02x, bR 0x%02x, wV 0x%04x, wI 0x%04x, wL 0x%04x",
+		pSetup->bmRequestType, pSetup->bRequest, pSetup->wValue,
+		pSetup->wIndex, pSetup->wLength);	
 }
 
 static int usb_midi_device_init(const struct device *dev)
@@ -242,6 +286,7 @@ static int usb_midi_device_init(const struct device *dev)
 
 static void midi_receive_cb(uint8_t ep, enum usb_dc_ep_cb_status_code status)
 {
+	LOG_INF("receive cb");
 }
 
 void usb_midi_register(const struct device *dev,
@@ -260,16 +305,16 @@ void usb_midi_register(const struct device *dev,
 
 	sys_slist_append(&usb_midi_data_devlist, &midi_dev_data->common.node);
 
-	LOG_INF("Device dev %p dev_data %p cfg %p added to devlist %p",
-		dev, midi_dev_data, dev->config,
-		&usb_midi_data_devlist);
+	// LOG_INF("Device dev %p dev_data %p cfg %p added to devlist %p",
+	// 	dev, midi_dev_data, dev->config,
+	// 	&usb_midi_data_devlist);
 }
 
-#define DEFINE_MIDI_DEVICE(dev)					  \
-	USBD_CFG_DATA_DEFINE(primary, midi)				  \
-	struct usb_cfg_data midi_config_##dev = {			  \
-		.usb_device_description	= NULL,				  \
-		.interface_config = midi_interface_config,		  \
+#define DEFINE_MIDI_DEVICE(dev)					  			\
+	USBD_CFG_DATA_DEFINE(primary, midi)				  		\
+	struct usb_cfg_data midi_config_##dev = {			  	\
+		.usb_device_description	= NULL,				  			\
+		.interface_config = midi_interface_config,		 	 	\
 		.interface_descriptor = &midi_device_##dev.std_ac_interface, \
 		.cb_usb_status = midi_cb_usb_status,			  \
 		.interface = {						  \
@@ -305,6 +350,4 @@ void test_func(void) {
 	// static uint8_t tester[] = { 1, 2, };
     // LOG_INF("%s", STRINGIFY((UTIL_LISTIFY(MIDI_DEVICE_COUNT, MIDI_DEVICE))));
 	// LOG_INF("%s", TEST_STRING);
-	LOG_INF("size: %d", (PROP_VAL_IS(ENDPOINT_N_ID(0, 0, 0, 1), direction, ENDPOINT_IN) << 7) |							
-		DT_PROP(ENDPOINT_N_ID(0, 0, 0, 0), ep_num));
 }
