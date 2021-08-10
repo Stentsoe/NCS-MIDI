@@ -144,6 +144,39 @@ UTIL_LISTIFY_LEVEL_2(COMPAT_COUNT(IFACE_N_ID(dev, iface), COMPAT_MIDI_SETTING), 
 #define LISTIFY_PHANDLES_PROP(node_id, phs, prop) \
 	LIST_DROP_EMPTY(UTIL_LISTIFY_LEVEL_4(DT_PROP_LEN(node_id, phs), PROP_VAL_LIST, node_id, phs, prop))
 
+
+
+struct usb_midi_in_jack {
+	uint8_t id;
+	void *entity_descriptor;
+	void (*midi_data_received)(const struct device *dev,
+					       struct net_buf *buffer,
+					       size_t size);
+};
+
+struct usb_midi_out_jack {
+	uint8_t id;
+	void *entity_descriptor;
+	
+};
+
+enum usb_midi_port_type {
+	EXT_OUT_JACK,
+	EXT_IN_JACK,
+	GROUP_TERMINAL,
+};
+
+struct usb_midi_port_config {
+	enum usb_midi_port_type type;
+	void *entity_descriptor;
+	uint8_t num_assoc;
+	union {
+		struct usb_midi_out_jack **out_jacks;
+		struct usb_midi_in_jack **in_jacks;
+	} assoc;
+	
+};
+
 /**
  * @warning Size of baInterface is 16 just to make it useable
  * for all kind of devices. Actual size of the struct should
@@ -329,6 +362,7 @@ struct cs_endpoint_descriptor_##dev##iface##set##endpoint {					\
 #endif
 
 
+
 /* Declare an in jack descriptor */
 #define IN_JACK_DESCRIPTOR(jack, iface, set) 	\
 	struct cs_midi_in_jack_descriptor	in_jack_##iface##_##set##_##jack;
@@ -488,11 +522,11 @@ struct cs_endpoint_descriptor_##dev##iface##set##endpoint {					\
 	.iJack = 0x00		\
 }
 
-#define INIT_OUT_JACK_PIN(pin, dev, iface, set, jack)	\
+#define INIT_OUT_JACK_PIN(pin, node_id)	\
 	.baSourceID##pin = DT_PROP_BY_PHANDLE_IDX(	\
-		OUT_JACK_N_ID(dev, iface, set, jack), sources, pin, id), 		\
+		node_id, sources, pin, id), 		\
 	.BaSourcePin##pin = DT_PROP_BY_IDX(	\
-		OUT_JACK_N_ID(dev, iface, set, jack), sources_pins, pin),
+		node_id, sources_pins, pin),
 
 #define INIT_CS_MIDI_OUT_JACK(dev, iface, set, jack)	\
 {							\
@@ -508,8 +542,8 @@ struct cs_endpoint_descriptor_##dev##iface##set##endpoint {					\
 	.bJackID = DT_PROP(OUT_JACK_N_ID(dev, iface, set, jack), id),	\
 	.bNrInputPins = DT_PROP_LEN(OUT_JACK_N_ID(dev, iface, set, jack), \
 		sources),		\
-		UTIL_LISTIFY_LEVEL_4(DT_PROP_LEN(OUT_JACK_N_ID(dev, iface, set, jack), \
-		sources), INIT_OUT_JACK_PIN, dev, iface, set, jack)\
+	UTIL_LISTIFY_LEVEL_4(DT_PROP_LEN(OUT_JACK_N_ID(dev, iface, set, jack), \
+		sources), INIT_OUT_JACK_PIN, OUT_JACK_N_ID(dev, iface, set, jack))\
 	.iJack = 0x00	\
 }
 
@@ -714,43 +748,6 @@ struct cs_endpoint_descriptor_##dev##iface##set##endpoint {					\
 		DT_PROP_LEN(DEV_N_ID(dev), in_eps), PHANDLES_LIST, DEV_N_ID(dev), in_eps))		
 */
 
-#define DEFINE_MIDI_EP_DATA(dev)\
-static struct usb_ep_cfg_data usb_midi_ep_data_##dev[] = {		  \
-UTIL_COND_CHOICE_N(8,								\
-	ENDPOINT_OUT_N_IS_USED(dev, 1),					\
-	ENDPOINT_OUT_N_IS_USED(dev, 2),					\
-	ENDPOINT_OUT_N_IS_USED(dev, 3),					\
-	ENDPOINT_OUT_N_IS_USED(dev, 4),					\
-	ENDPOINT_OUT_N_IS_USED(dev, 5),					\
-	ENDPOINT_OUT_N_IS_USED(dev, 6),					\
-	ENDPOINT_OUT_N_IS_USED(dev, 7),					\
-	ENDPOINT_OUT_N_IS_USED(dev, 8),					\
-	(INIT_EP_DATA(midi_receive_cb, 0x01),),			\
-	(INIT_EP_DATA(midi_receive_cb, 0x02),),			\
-	(INIT_EP_DATA(midi_receive_cb, 0x03),),			\
-	(INIT_EP_DATA(midi_receive_cb, 0x04),),			\
-	(INIT_EP_DATA(midi_receive_cb, 0x05),),			\
-	(INIT_EP_DATA(midi_receive_cb, 0x06),),			\
-	(INIT_EP_DATA(midi_receive_cb, 0x07),),			\
-	(INIT_EP_DATA(midi_receive_cb, 0x08),))			\
-UTIL_COND_CHOICE_N(8,								\
-	ENDPOINT_IN_N_IS_USED(dev, 1),					\
-	ENDPOINT_IN_N_IS_USED(dev, 2),					\
-	ENDPOINT_IN_N_IS_USED(dev, 3),					\
-	ENDPOINT_IN_N_IS_USED(dev, 4),					\
-	ENDPOINT_IN_N_IS_USED(dev, 5),					\
-	ENDPOINT_IN_N_IS_USED(dev, 6),					\
-	ENDPOINT_IN_N_IS_USED(dev, 7),					\
-	ENDPOINT_IN_N_IS_USED(dev, 8),					\
-	(INIT_EP_DATA(usb_transfer_ep_callback, 0x81),),\
-	(INIT_EP_DATA(usb_transfer_ep_callback, 0x82),),\
-	(INIT_EP_DATA(usb_transfer_ep_callback, 0x83),),\
-	(INIT_EP_DATA(usb_transfer_ep_callback, 0x84),),\
-	(INIT_EP_DATA(usb_transfer_ep_callback, 0x85),),\
-	(INIT_EP_DATA(usb_transfer_ep_callback, 0x86),),\
-	(INIT_EP_DATA(usb_transfer_ep_callback, 0x87),),\
-	(INIT_EP_DATA(usb_transfer_ep_callback, 0x88),)) \
-};
 
 
 #define DEFINE_MIDI_DESCRIPTOR(dev)	\
@@ -762,11 +759,8 @@ UTIL_COND_CHOICE_N(8,								\
 		UTIL_LISTIFY_LEVEL_1(COMPAT_COUNT(DEV_N_ID(dev), COMPAT_MIDI_INTERFACE), 	\
 			DEFINE_MIDI_INTERFACE_DESCRIPTOR, dev)	 \
 	};
+ 	
 
-#define	TEST_STRING	\
-	STRINGIFY(\
-		()\
-	)
+
 
 #endif /* ZEPHYR_INCLUDE_USB_CLASS_MIDI_INTERNAL_H_ */
-

@@ -8,6 +8,11 @@ description: USB MIDI OUT jack.
 compatible: "usb-midi-out-jack"
 
 properties:
+  label:
+    type: string
+    required: true
+    description: String identifying the jack. Will be encoded into string descriptor, as well as being used to get port device genrated by external enpoints.
+
   type:
     type: string
     required: true

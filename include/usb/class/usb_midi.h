@@ -64,18 +64,15 @@ enum usb_midi_cs_gt_block_desc_subtypes	{
 	USB_GR_TRM_BLOCK = 0x02
 };
 
-/**
- * @brief Audio callbacks used to interact with audio devices by user App.
- *
- * usb_audio_ops structure contains all relevant callbacks to interact with
- * USB Audio devices. Each of this callbacks is optional and may be left NULL.
- * This will not break the stack but could make USB Audio device useless.
- * Depending on the device some of those callbacks are necessary to make USB
- * device work as expected sending/receiving data. For more information refer
- * to callback documentation above.
- */
+enum usb_midi_jack_direction {
+	JACK_IN,
+	JACK_OUT
+};
+
+
+
+
 struct usb_midi_ops {
-	/* Callbacks */
 
 };
 
