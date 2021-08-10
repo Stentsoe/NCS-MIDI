@@ -34,31 +34,20 @@ extern "C" {
  *		 buffer by itself.
  * @param size	 Amount of data that were successfully send/received.
  */
-typedef void (*midi_data_received)(const struct device *dev,
-					       struct net_buf *buffer,
-					       size_t size);
+// typedef void (*midi_data_received)(const struct device *dev,
+// 					       struct net_buf *buffer,
+// 					       size_t size);
 
-/**
- * @brief Audio callbacks used to interact with audio devices by user App.
- *
- */
-struct midi_ops {
-		/* Callback called when data were successfully received by receive
-	 * capable device. Applicable for headset and headphones. Unused for
-	 * microphone.
-	 */
-	midi_data_received data_received_cb;
-
-};
-
-struct midi_api {
-	int (*midi_send)(const struct device *dev,
+typedef int (*midi_transfer)(const struct device *dev,
 				    struct net_buf *buffer,
 					size_t size);
 
+struct midi_api {
+	midi_transfer midi_transfer;
+
 	int (*midi_callback_set)(const struct device *dev,
-				 struct midi_ops *ops,
-				 void *user_data);
+						midi_transfer cb,
+						void *user_data);
 
 };
 
@@ -79,8 +68,8 @@ static inline int midi_send(const struct device *dev,
 	const struct midi_api *api =
 			(const struct midi_api *)dev->api;
     if (api != NULL) {
-        if (api->midi_send != NULL) {
-            return api->midi_send(dev, buffer, size);
+        if (api->midi_transfer != NULL) {
+            return api->midi_transfer(dev, buffer, size);
         }
     }
 	
@@ -98,14 +87,14 @@ static inline int midi_send(const struct device *dev,
  * @retval 0	    If successful, negative errno code otherwise.
  */
 static inline int midi_callback_set(const struct device *dev,
-				    struct midi_ops *ops,
+				    midi_transfer cb,
 				    void *user_data)
 { 
 	const struct midi_api *api =
 			(const struct midi_api *)dev->api;
     if (api != NULL) {
         if (api->midi_callback_set != NULL) {
-            return api->midi_callback_set(dev, ops, user_data);
+            return api->midi_callback_set(dev, cb, user_data);
         }
     }
 	

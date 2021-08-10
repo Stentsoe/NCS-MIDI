@@ -145,37 +145,25 @@ UTIL_LISTIFY_LEVEL_2(COMPAT_COUNT(IFACE_N_ID(dev, iface), COMPAT_MIDI_SETTING), 
 	LIST_DROP_EMPTY(UTIL_LISTIFY_LEVEL_4(DT_PROP_LEN(node_id, phs), PROP_VAL_LIST, node_id, phs, prop))
 
 
+enum jack_type {
+	EMBEDDED,
+	EXTERNAL
+};
 
-struct usb_midi_in_jack {
+
+
+struct usb_midi_out_jack_config {
 	uint8_t id;
-	void *entity_descriptor;
-	void (*midi_data_received)(const struct device *dev,
-					       struct net_buf *buffer,
-					       size_t size);
+	enum jack_type type;
+	uint8_t num_sources;
+	uint8_t *sources;
 };
 
-struct usb_midi_out_jack {
+struct usb_midi_in_jack_config {
 	uint8_t id;
-	void *entity_descriptor;
-	
+	enum jack_type type;
 };
 
-enum usb_midi_port_type {
-	EXT_OUT_JACK,
-	EXT_IN_JACK,
-	GROUP_TERMINAL,
-};
-
-struct usb_midi_port_config {
-	enum usb_midi_port_type type;
-	void *entity_descriptor;
-	uint8_t num_assoc;
-	union {
-		struct usb_midi_out_jack **out_jacks;
-		struct usb_midi_in_jack **in_jacks;
-	} assoc;
-	
-};
 
 /**
  * @warning Size of baInterface is 16 just to make it useable
@@ -365,16 +353,16 @@ struct cs_endpoint_descriptor_##dev##iface##set##endpoint {					\
 
 /* Declare an in jack descriptor */
 #define IN_JACK_DESCRIPTOR(jack, iface, set) 	\
-	struct cs_midi_in_jack_descriptor	in_jack_##iface##_##set##_##jack;
+	struct cs_midi_in_jack_descriptor	in_jack_##iface##set##jack;
 
 /* Declare an out jack descriptor */
 #define OUT_JACK_DESCRIPTOR(jack, dev, iface, set) 						\
 	struct cs_midi_out_jack_descriptor_##dev##iface##set##jack	\
-		out_jack_##iface##_##set##_##jack;
+		out_jack_##iface##set##jack;
 
 #define MIDI_1_0_ENDPOINT_DESCRIPTOR(endpoint, dev, iface, set)					\
-	struct std_ms_1_0_endpoint_descriptor std_ep_##iface##_##set##_##endpoint;	\
-	struct cs_endpoint_descriptor_##dev##iface##set##endpoint cs_ep_##iface##_##set##_##endpoint;
+	struct std_ms_1_0_endpoint_descriptor std_ep_##iface##set##endpoint;	\
+	struct cs_endpoint_descriptor_##dev##iface##set##endpoint cs_ep_##iface##set##endpoint;
 
 /* Declare a MIDI 1.0 alternate setting descriptor */
 #define	MIDI_1_0_SETTING_DESCRIPTOR(dev, iface, set) 			\
@@ -389,12 +377,12 @@ struct cs_endpoint_descriptor_##dev##iface##set##endpoint {					\
 		MIDI_1_0_ENDPOINT_DESCRIPTOR, dev, iface, set)
 
 #define MIDI_2_0_ENDPOINT_DESCRIPTOR(endpoint, dev, iface, set)								\
-	struct std_ms_2_0_endpoint_descriptor std_ep_##iface##_##set##_##endpoint;	\
-	struct cs_endpoint_descriptor_##dev##iface##set##endpoint cs_ep_##iface##_##set##_##endpoint;
+	struct std_ms_2_0_endpoint_descriptor std_ep_##iface##set##endpoint;	\
+	struct cs_endpoint_descriptor_##dev##iface##set##endpoint cs_ep_##iface##set##endpoint;
 
 #define GROUP_TERMINAL_BLOCK_DESCRIPTOR(gt_block, iface, set)		\
 	struct cs_group_terminal_block_descriptor										\
-		group_terminal_block_##iface##_##set##_##gt_block;
+		group_terminal_block_##iface##set##gt_block;
 
 /* Declare a MIDI 2.0 alternate setting descriptor */
 #define	MIDI_2_0_SETTING_DESCRIPTOR(dev, iface, set) 			\
@@ -411,8 +399,8 @@ struct cs_endpoint_descriptor_##dev##iface##set##endpoint {					\
 
 /* Declare an alternate setting descriptor */
 #define MIDI_SETTING_DESCRIPTOR(set, dev, iface) 			\
-	struct	std_ms_if_descriptor std_ms_interface_##iface##_##set;	\
-	struct cs_ms_if_descriptor cs_ms_interface_##iface##_##set;\
+	struct	std_ms_if_descriptor std_ms_interface_##iface##set;	\
+	struct cs_ms_if_descriptor cs_ms_interface_##iface##set;\
 	UTIL_COND_CHOICE_N(2,	\
 		PROP_VAL_IS(SET_N_ID(dev, iface, set), revision, SETTING_MIDI_1_0), \
 		PROP_VAL_IS(SET_N_ID(dev, iface, set), revision, SETTING_MIDI_2_0), \
@@ -609,8 +597,7 @@ struct cs_endpoint_descriptor_##dev##iface##set##endpoint {					\
 	.bDescriptorType = USB_ENDPOINT_DESC,							\
 	.bEndpointAddress = (											\
 		PROP_VAL_IS(ENDPOINT_N_ID(dev, iface, set, endpoint), 		\
-			direction, ENDPOINT_IN) << 7) |							\
-		DT_PROP(ENDPOINT_N_ID(dev, iface, set, endpoint), ep_num),	\
+			direction, ENDPOINT_IN) << 7) |	0x00,					\
 	.bmAttributes = 0x02,											\
 	.wMaxPacketSize = sys_cpu_to_le16(0x0040),						\
 	.bInterval = 0x00,												\
@@ -624,8 +611,7 @@ struct cs_endpoint_descriptor_##dev##iface##set##endpoint {					\
 	.bDescriptorType = USB_ENDPOINT_DESC,				\
 	.bEndpointAddress = (	\
 		PROP_VAL_IS(ENDPOINT_N_ID(dev, iface, set, endpoint), \
-			direction, ENDPOINT_IN) << 7) |\
-		DT_PROP(ENDPOINT_N_ID(dev, iface, set, endpoint), ep_num),					\
+			direction, ENDPOINT_IN) << 7) | 0x00,					\
 	.bmAttributes = 0x02 |\
 	 	(PROP_VAL_IS(ENDPOINT_N_ID(dev, iface, set, endpoint), \
 			type, ENDPOINT_INTERRUPT)),	\
@@ -660,14 +646,14 @@ struct cs_endpoint_descriptor_##dev##iface##set##endpoint {					\
 	}
 
 #define	DEFINE_IN_JACK_DESCRIPTOR(jack, dev, iface, set) \
-	.in_jack_##iface##_##set##_##jack = INIT_CS_MIDI_IN_JACK(dev, iface, set, jack), \
+	.in_jack_##iface##set##jack = INIT_CS_MIDI_IN_JACK(dev, iface, set, jack), \
 
 #define DEFINE_OUT_JACK_DESCRIPTOR(jack, dev, iface, set) \
-	.out_jack_##iface##_##set##_##jack = INIT_CS_MIDI_OUT_JACK(dev, iface, set, jack),\
+	.out_jack_##iface##set##jack = INIT_CS_MIDI_OUT_JACK(dev, iface, set, jack),\
 
 #define DEFINE_MIDI_1_0_ENDPOINT_DESCRIPTOR(endpoint, dev, iface, set) \
-	.std_ep_##iface##_##set##_##endpoint = INIT_STD_MS_MIDI_1_0_EP(dev, iface, set, endpoint), \
-	.cs_ep_##iface##_##set##_##endpoint = INIT_MIDI_1_0_CS_MS_EP(dev, iface, set, endpoint),\
+	.std_ep_##iface##set##endpoint = INIT_STD_MS_MIDI_1_0_EP(dev, iface, set, endpoint), \
+	.cs_ep_##iface##set##endpoint = INIT_MIDI_1_0_CS_MS_EP(dev, iface, set, endpoint),\
 
 #define DEFINE_MIDI_1_0_SETTING_DESCRIPTOR(dev, iface, set) \
 	UTIL_LISTIFY_LEVEL_3(COMPAT_COUNT(								\
@@ -681,15 +667,15 @@ struct cs_endpoint_descriptor_##dev##iface##set##endpoint {					\
 		DEFINE_MIDI_1_0_ENDPOINT_DESCRIPTOR, dev, iface, set)
 
 #define DEFINE_MIDI_2_0_ENDPOINT_DESCRIPTOR(endpoint, dev, iface, set)	\
-	.std_ep_##iface##_##set##_##endpoint = INIT_STD_MS_MIDI_2_0_EP(dev, iface, set, endpoint), \
-	.cs_ep_##iface##_##set##_##endpoint =  INIT_MIDI_2_0_CS_MS_EP(dev, iface, set, endpoint), \
+	.std_ep_##iface##set##endpoint = INIT_STD_MS_MIDI_2_0_EP(dev, iface, set, endpoint), \
+	.cs_ep_##iface##set##endpoint =  INIT_MIDI_2_0_CS_MS_EP(dev, iface, set, endpoint), \
 
 #define DEFINE_GROUP_TERMINAL_BLOCK_HEADER_DESCRIPTOR(dev, iface, set)		\
 	.group_terminal_block_header = INIT_CS_GT_BLK_HEADER(dev, iface, set),
 
 
 #define DEFINE_GROUP_TERMINAL_BLOCK_DESCRIPTOR(gt_block, dev, iface, set)		\
-	.group_terminal_block_##iface##_##set##_##gt_block = INIT_CS_GT_BLK(dev, iface, set, gt_blk), \
+	.group_terminal_block_##iface##set##gt_block = INIT_CS_GT_BLK(dev, iface, set, gt_blk), \
 
 #define DEFINE_MIDI_2_0_SETTING_DESCRIPTOR(dev, iface, set) \
 	UTIL_LISTIFY_LEVEL_3(COMPAT_COUNT(								\
@@ -703,8 +689,8 @@ struct cs_endpoint_descriptor_##dev##iface##set##endpoint {					\
 		DEFINE_GROUP_TERMINAL_BLOCK_DESCRIPTOR, dev, iface, set)
 
 #define DEFINE_MIDI_SETTING_DESCRIPTOR(set, dev, iface)	\
-	.std_ms_interface_##iface##_##set = INIT_STD_MS_IF(dev, iface, set),	 \
-	.cs_ms_interface_##iface##_##set = INIT_CS_MS_IF(dev, iface, set), \
+	.std_ms_interface_##iface##set = INIT_STD_MS_IF(dev, iface, set),	 \
+	.cs_ms_interface_##iface##set = INIT_CS_MS_IF(dev, iface, set), \
 	UTIL_COND_CHOICE_N(2,	\
 		PROP_VAL_IS(SET_N_ID(dev, iface, set), revision, SETTING_MIDI_1_0), \
 		PROP_VAL_IS(SET_N_ID(dev, iface, set), revision, SETTING_MIDI_2_0), \
@@ -714,7 +700,7 @@ struct cs_endpoint_descriptor_##dev##iface##set##endpoint {					\
 #define DEFINE_MIDI_INTERFACE_DESCRIPTOR(iface, dev)	\
 	UTIL_LISTIFY_LEVEL_2(COMPAT_COUNT(IFACE_N_ID(dev, iface), COMPAT_MIDI_SETTING), 			\
 		DEFINE_MIDI_SETTING_DESCRIPTOR, dev, iface)
-
+/*
 #define ENDPOINT_IN_IS_N(endpoint, dev, iface, set, N) 	\
 	COND_CODE_0(DT_ENUM_IDX(\
 		ENDPOINT_N_ID(dev, iface, set, endpoint), direction),	\
@@ -739,7 +725,7 @@ struct cs_endpoint_descriptor_##dev##iface##set##endpoint {					\
 	GET_ARG_N_EXPANDED(1, LISTIFY_ON_COMPAT_IN_DEVICE(				\
 		ENDPOINT_OUT_IS_N, COMPAT_MIDI_ENDPOINT, dev, N))
 
-/*
+
 #define PHANDLES_LIST(idx, node_id, prop) \
 	DT_PROP_BY_IDX(node_id, prop, idx), 
 

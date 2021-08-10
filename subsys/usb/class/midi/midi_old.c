@@ -34,26 +34,20 @@ LOG_MODULE_REGISTER(usb_midi, CONFIG_USB_MIDI_LOG_LEVEL);
 // };
 
 
-struct usb_midi_out_jack_data {
+struct usb_midi_emb_jack {
 	uint8_t id;
-	struct midi_api *api;
-	sys_snode_t node;
+
+	// void (*received_cb)(const struct device *dev,
+	// 				       struct net_buf *buffer,
+	// 				       size_t size);
 };
 
-struct usb_midi_in_jack_data {
+
+
+struct usb_midi_ext_jack {
+	enum usb_midi_jack_direction direction;
 	uint8_t id;
-	sys_slist_t api_list;
-	sys_snode_t node;
 };
-
-
-struct midi_ep_data {
-	uint8_t *cs_desc_ptr;
-	uint8_t ep_num;
-	uint8_t num_assoc;
-	uint8_t *assoc;
-};
-
 
 struct usb_midi_iface_data {
 	bool enabled;
@@ -76,18 +70,11 @@ struct usb_midi_dev_data {
 
 	struct usb_midi_iface_data *iface_list;
 
-	uint8_t num_eps;
-
-	struct midi_ep_data *ep_list;
-
 };
 
 struct midi_ep_data *midi_internal_ep_data[16];
 
 static sys_slist_t usb_midi_data_devlist;
-
-static sys_slist_t usb_midi_in_jack_list;
-
 
 #define INIT_JACK_DATA(jack, dev, iface, set, _) \
 	{}
@@ -113,8 +100,6 @@ static sys_slist_t usb_midi_in_jack_list;
 		.iface_list = iface_data_##dev,						\
 		.num_ifaces = COMPAT_COUNT(DEV_N_ID(dev), COMPAT_MIDI_INTERFACE), \
 		.pool = &buf_pool_##dev, \
-		.num_eps = DT_NUM_INST_STATUS_OKAY(COMPAT_MIDI_ENDPOINT), \
-		.ep_list = midi_ep_list_##dev, \
 	};
 
 
@@ -126,8 +111,20 @@ static inline const struct usb_midi_port_config *get_dev_config(const struct dev
 
 
 static void midi_interface_config(struct usb_desc_header *head,
-				   uint8_t bInterfaceNumber);
+				   uint8_t bInterfaceNumber)
+{
+// 	struct usb_if_descriptor *iface = (struct usb_if_descriptor *)head;
+// 	struct cs_ac_if_descriptor *header;
 
+// #ifdef CONFIG_USB_COMPOSITE_DEVICE
+// 	struct usb_association_descriptor *iad =
+// 		(struct usb_association_descriptor *)
+// 		((char *)iface - sizeof(struct usb_association_descriptor));
+// 	iad->bFirstInterface = bInterfaceNumber;
+// #endif
+
+	LOG_INF("if config");
+}
 
 static void midi_cb_usb_status(struct usb_cfg_data *cfg,
 			 enum usb_dc_status_code cb_status,
@@ -404,98 +401,19 @@ static int midi_class_handle_req(struct usb_setup_packet *pSetup,
 	return 0;
 }
 
-	
-
-struct midi_ep_data *get_ep_data_by_ep_num(uint8_t ep_num)
-{
-	struct usb_dev_data *dev_data;
-	struct usb_midi_dev_data *midi_dev_data;
-	struct midi_ep_data *ep_data;
-
-	SYS_SLIST_FOR_EACH_CONTAINER(&usb_midi_data_devlist, dev_data, node) {
-		midi_dev_data = CONTAINER_OF(dev_data,
-					      struct usb_midi_dev_data,
-					      common);
-		for (size_t i = 0; i < midi_dev_data->num_eps; i++)
-		{
-			ep_data = (struct midi_ep_data *)((int)midi_dev_data->ep_list + i*sizeof(struct midi_ep_data));
-			if(ep_data->ep_num == ep_num) {
-				return ep_data;
-			}
-		}	
-	}
-	return NULL;
-}
-
-
 static int usb_midi_device_init(const struct device *dev)
 {
 		LOG_INF("Init MIDI Device: dev %p (%s)", dev, dev->name);
 
-		struct usb_midi_dev_data *midi_dev_data = dev->data;
-		struct midi_ep_data *ep_data;
-
-		
-		for (size_t i = 0; i < midi_dev_data->num_eps; i++)
-		{
-			ep_data = (struct midi_ep_data *)((int)midi_dev_data->ep_list + i*sizeof(struct midi_ep_data));
-			ep_data->ep_num = *(ep_data->cs_desc_ptr+2);
-			
-			LOG_INF("ep_data->ep_num %d", ep_data->ep_num);
-		}
 		return 0;
 }
 
-static struct usb_midi_in_jack_data *get_midi_in_jack_by_id(uint8_t id)
+
+static int usb_midi_port_init(const struct device *dev)
 {
-	struct usb_midi_in_jack_data *in_jack_data;
+		LOG_INF("Init MIDI Port: dev %p (%s)", dev, dev->name);
 
-	SYS_SLIST_FOR_EACH_CONTAINER(&usb_midi_in_jack_list, in_jack_data, node) {
-		if (in_jack_data->id == id) {
-			return in_jack_data;
-		}
-	}
-	return NULL;
-
-}
-
-static int usb_midi_out_jack_init(const struct device *dev) 
-{
-
-	struct usb_midi_out_jack_data *out_jack_data = dev->data;
-	const struct usb_midi_out_jack_config *cfg = dev->config;
-	uint8_t *source = cfg->sources;
-	struct usb_midi_in_jack_data *in_jack_data;
-
-	out_jack_data->api = (struct midi_api*)dev->api;
-	out_jack_data->id = cfg->id;
-
-	for (size_t i = 0; i < cfg->num_sources; i++)
-	{
-		in_jack_data = get_midi_in_jack_by_id((uint8_t)*(source + i));
-		if(in_jack_data) {
-			sys_slist_append(&in_jack_data->api_list, &out_jack_data->node);
-		}
-		in_jack_data = NULL;
-	}
-	
-	LOG_INF("Init MIDI OUT JACK: dev %p (%s)", dev, dev->name);
-
-	return 0;
-}
-
-static int usb_midi_in_jack_init(const struct device *dev) 
-{
-	struct usb_midi_in_jack_data *in_jack_data = dev->data;
-	const struct usb_midi_in_jack_config *cfg = dev->config;
-
-	in_jack_data->id = cfg->id;
-
-	sys_slist_append(&usb_midi_in_jack_list, &in_jack_data->node);
-
-	LOG_INF("Init MIDI IN JACK: dev %p (%s)", dev, dev->name);
-
-	return 0;
+		return 0;
 }
 
 // static void midi_write_cb(uint8_t ep, int size, void *priv)
@@ -536,64 +454,8 @@ static int usb_midi_in_jack_init(const struct device *dev)
 
 
 
-static void send_to_in_jack(struct usb_midi_in_jack_data *in_jack_data,
-					const struct device *dev,
-				    struct net_buf *buffer,
-					size_t size)
-{
-	struct usb_midi_out_jack_data *out_jack_data;
-	struct midi_api *api;
-	SYS_SLIST_FOR_EACH_CONTAINER(&in_jack_data->api_list, out_jack_data, node) {
-		api = out_jack_data->api;
-		if (api != NULL && api->midi_transfer != NULL) {
-			api->midi_transfer(dev, buffer, size);
-		}
-	}
-}
-
-
 static void midi_receive_cb(uint8_t ep, enum usb_dc_ep_cb_status_code status)
 {
-
-	struct midi_ep_data *ep_data;
-	struct usb_midi_in_jack_data *jack;
-	uint8_t jack_id;
-	struct net_buf *buffer;
-	int ret_bytes;
-	int ret;
-
-	// TODO: finne ut hvordan enten få tak i pool, eller definere pool per ep. Samt finne ut hvordan device skal returneres i callback.
-	
-	ep_data = get_ep_data_by_ep_num(ep);
-	buffer = net_buf_alloc(midi_dev_data->pool, K_NO_WAIT);
-	if (!buffer) {
-		LOG_ERR("Failed to allocate data buffer");
-		return;
-	}
-
-	ret = usb_read(ep, buffer->data, buffer->size, &ret_bytes);
-
-	if (ret) {
-		LOG_ERR("ret=%d ", ret);
-		net_buf_unref(buffer);
-		return;
-	}
-
-	if (!ret_bytes) {
-		net_buf_unref(buffer);
-		return;
-	}
-
-	LOG_INF("ep_num %d", ep_data->ep_num);
-	for (size_t i = 0; i < ep_data->num_assoc; i++)
-	{
-		jack_id = *(uint8_t*)((int)ep_data->assoc+i);
-		LOG_INF("ep_num %d", jack_id);
-		jack = get_midi_in_jack_by_id(jack_id);
-		send_to_in_jack(jack, NULL, net_buf_clone(buffer, K_NO_WAIT), ret_bytes);
-	}
-	
-	net_buf_unref(buffer);
 	// struct usb_midi_dev_data *midi_dev_data;
 	// struct usb_dev_data *common;
 	// struct net_buf *buffer;
@@ -680,82 +542,56 @@ int usb_midi_send(const struct device *dev,
 // 	return;
 // }
 
-int usb_midi_out_jack_callback_set(const struct device *dev,
-				 midi_transfer cb,
+int usb_midi_port_callback_set(const struct device *dev,
+				 struct midi_ops *ops,
 				 void *user_data)
 {
-	const struct usb_midi_out_jack_config *cfg = dev->config;
-	struct usb_midi_out_jack_data *out_jack_data = dev->data;
+	// const struct usb_midi_port_config  *midi_cfg = get_dev_config(dev);
 
-	if (cfg->type == EMBEDDED)
-	{	
-		return -EINVAL;
-	}
+	// if ( midi_cfg->type == EXT_OUT_JACK){
+	// 	for (size_t i = 0; i < midi_cfg->num_assoc; i++)
+	// 	{
+	// 		midi_cfg->assoc.in_jacks[i].received_cb = ops->data_received_cb;
+	// 	}
+	// }
 
-	out_jack_data->api->midi_transfer = cb; 
-
-	LOG_INF("callback set %p", out_jack_data->api->midi_transfer);
-	
 	return 0;
 }
 
-
-#define LIST_SOURCES_OF_OUT_JACK(idx, node_id)	\
-	DT_PROP_BY_PHANDLE_IDX(node_id, sources, idx, id),	
-
-#define DEFINE_MIDI_OUT_JACK(jack, dev, iface, set, _)								\
-	uint8_t out_jack_sources_##dev##iface##set##jack[] = { UTIL_LISTIFY_LEVEL_4(		\
-			DT_PROP_LEN(OUT_JACK_N_ID(dev, iface, set, jack), sources),				\
-			LIST_SOURCES_OF_OUT_JACK, OUT_JACK_N_ID(dev, iface, set, jack)) };		\
-	struct usb_midi_out_jack_data out_jack_data_##dev##iface##set##jack;			\
-	struct usb_midi_out_jack_config out_jack_cfg_data_##dev##iface##set##jack = {	\
-		.id = DT_PROP(OUT_JACK_N_ID(dev, iface, set, jack), id),					\
-		.type = UTIL_COND_CHOICE_N(2,												\
-		PROP_VAL_IS(OUT_JACK_N_ID(dev, iface, set, jack), 							\
-			type, JACK_EMBEDDED), 													\
-		PROP_VAL_IS(OUT_JACK_N_ID(dev, iface, set, jack), 							\
-			type, JACK_EXTERNAL), 													\
-		(EMBEDDED), (EXTERNAL)) ,													\
-		.num_sources = DT_PROP_LEN(OUT_JACK_N_ID(dev, iface, set, jack), sources),	\
-		.sources = out_jack_sources_##dev##iface##set##jack, 						\
+#define DEFINE_MIDI_IN_PORT(jack, dev, iface, set, _) 								\
+COND_CODE_1(PROP_VAL_IS(OUT_JACK_N_ID(dev, iface, set, jack), 						\
+			type, JACK_EXTERNAL), (													\
+	struct usb_midi_emb_jack \
+		*in_port_in_jacks_##dev##iface##set##jack[DT_PROP_LEN(OUT_JACK_N_ID(dev, iface, set, jack), sources)];\
+																				\
+	struct usb_midi_port_config in_port_cfg_data_##dev##iface##set##jack = {		\
+		.type = EXT_JACK_OUT,														\
+		.entity_descriptor = &midi_device_##dev.out_jack_##iface##_##set##_##jack,	\
+		.num_assoc = DT_PROP_LEN(OUT_JACK_N_ID(dev, iface, set, jack), sources),		\
+		.assoc.in_jacks = in_port_in_jacks_##dev##iface##set##jack,													\
 	};																				\
-	static struct midi_api usb_midi_out_jack_api_##dev##iface##set##jack = {	\
-		.midi_callback_set = usb_midi_out_jack_callback_set, 						\
+	static const struct midi_api usb_midi_out_jack_api_##dev##iface##set##jack = {	\
+		.midi_send = usb_midi_send, 												\
+		.midi_callback_set = usb_midi_port_callback_set, 							\
 	};																				\
 																					\
 	DEVICE_DT_DEFINE(OUT_JACK_N_ID(dev, iface, set, jack), 							\
-			    &usb_midi_out_jack_init,			  									\
+			    &usb_midi_port_init,			  									\
 			    NULL,					  											\
 			    &out_jack_data_##dev##iface##set##jack,			  					\
-			    &out_jack_cfg_data_##dev##iface##set##jack, 						\
+			    &in_port_cfg_data_##dev##iface##set##jack, 						\
 				APPLICATION,	  													\
 			    CONFIG_KERNEL_INIT_PRIORITY_DEVICE,		  							\
-			    &usb_midi_out_jack_api_##dev##iface##set##jack);
+			    &usb_midi_out_jack_api_##dev##iface##set##jack);					\
+			), ())																	\
 
 
-#define DEFINE_MIDI_IN_JACK(jack, dev, iface, set, _) 								\
-	struct usb_midi_in_jack_data in_jack_data_##dev##iface##set##jack;				\
-	struct usb_midi_in_jack_config in_jack_cfg_data_##dev##iface##set##jack = {		\
-		.id = DT_PROP(IN_JACK_N_ID(dev, iface, set, jack), id),						\
-		.type = UTIL_COND_CHOICE_N(2,												\
-		PROP_VAL_IS(IN_JACK_N_ID(dev, iface, set, jack), 							\
-			type, JACK_EMBEDDED), 													\
-		PROP_VAL_IS(IN_JACK_N_ID(dev, iface, set, jack), 							\
-			type, JACK_EXTERNAL), 													\
-		(EMBEDDED), (EXTERNAL)), 													\
-	};																				\
-	DEVICE_DT_DEFINE(IN_JACK_N_ID(dev, iface, set, jack), 							\
-			    &usb_midi_in_jack_init,			  									\
-			    NULL,					  											\
-			    &in_jack_data_##dev##iface##set##jack,			  					\
-			    &in_jack_cfg_data_##dev##iface##set##jack, 							\
-				APPLICATION,	  													\
-			    CONFIG_KERNEL_INIT_PRIORITY_DEVICE,		  							\
-			    DUMMY_API);
+#define DEFINE_MIDI_OUT_PORT(jack, dev, iface, set, _) 	\
 
-#define DEFINE_MIDI_JACKS(dev)	\
-	LISTIFY_ON_COMPAT_IN_DEVICE(DEFINE_MIDI_OUT_JACK, COMPAT_MIDI_OUT_JACK, dev)\
-	LISTIFY_ON_COMPAT_IN_DEVICE(DEFINE_MIDI_IN_JACK, COMPAT_MIDI_IN_JACK, dev) \
+
+#define DEFINE_MIDI_PORTS(dev)	\
+	LISTIFY_ON_COMPAT_IN_DEVICE(DEFINE_MIDI_OUT_PORT, COMPAT_MIDI_IN_JACK, dev) \
+	LISTIFY_ON_COMPAT_IN_DEVICE(DEFINE_MIDI_IN_PORT, COMPAT_MIDI_OUT_JACK, dev)
 
 #define DEFINE_BUF_POOL(dev) \
 	NET_BUF_POOL_FIXED_DEFINE(buf_pool_##dev, 5, 8, net_buf_destroy);
@@ -764,10 +600,11 @@ int usb_midi_out_jack_callback_set(const struct device *dev,
 	struct usb_midi_emb_jack emb_in_jack_##dev##iface##set##jack = { 	\
 		.id = DT_PROP(IN_JACK_N_ID(dev, iface, set, jack), id) 			\
 	};
-
+																	\
 #define DEFINE_MIDI_EMB_JACKS(dev)\
 	struct usb_midi_emb_jack *emb_in_jacks[DT_NUM_INST_STATUS_OKAY(COMPAT_MIDI_IN_JACK)]; \
 	LISTIFY_ON_COMPAT_IN_DEVICE(DEFINE_EMB_IN_JACK, COMPAT_MIDI_IN_JACK, dev)
+
 
 #define DEFINE_MIDI_DEVICE(dev)					  				\
 	USBD_CFG_DATA_DEFINE(primary, midi)				  			\
@@ -792,49 +629,82 @@ int usb_midi_out_jack_callback_set(const struct device *dev,
 			    CONFIG_KERNEL_INIT_PRIORITY_DEVICE,		  		\
 			    DUMMY_API);
 
-#define LIST_ENDPOINTS(endpoint, dev, iface, set, _) \
-	UTIL_COND_CHOICE_N(2, \
-		PROP_VAL_IS(ENDPOINT_N_ID(dev, iface, set, endpoint), direction, ENDPOINT_IN),\
-		PROP_VAL_IS(ENDPOINT_N_ID(dev, iface, set, endpoint), direction, ENDPOINT_OUT),\
-		(INIT_EP_DATA(usb_transfer_ep_callback, AUTO_EP_IN), ), \
-		(INIT_EP_DATA(midi_receive_cb, AUTO_EP_OUT), ))
-
-#define LIST_ASSOC_OF_OUT_EP(idx, node_id)	\
-	DT_PROP_BY_PHANDLE_IDX(node_id, assoc_entities, idx, id),	
-
-#define DEFINE_EP_ASSOC_LISTS(endpoint, dev, iface, set, _) \
-	uint8_t ep_assoc_##dev##iface##set##endpoint[] = { UTIL_LISTIFY_LEVEL_4(		\
-			DT_PROP_LEN(ENDPOINT_N_ID(dev, iface, set, endpoint), assoc_entities),				\
-			LIST_ASSOC_OF_OUT_EP, ENDPOINT_N_ID(dev, iface, set, endpoint)) \
-	}; 
-
-
-#define LIST_ENPOINTS(endpoint, dev, iface, set, _) 					\
-	{																						\
-		.cs_desc_ptr = (uint8_t*)&midi_device_##dev.std_ep_##iface##set##endpoint,						\
+#define DEFINE_INTERNAL_MIDI_1_0_OUT_EP_DATA(dev, iface, set, endpoint) \
+	struct usb_midi_emb_jack *out_ep_in_jacks_##dev##iface##set##endpoint[DT_PROP_LEN(ENDPOINT_N_ID(dev, iface, set, endpoint), assoc_entities)]; \
+	struct midi_ep_data midi_internal_ep_data_##dev##iface##set##endpoint = {\
 		.num_assoc = DT_PROP_LEN(ENDPOINT_N_ID(dev, iface, set, endpoint), assoc_entities), \
-		.assoc = ep_assoc_##dev##iface##set##endpoint, 										\
-	},
-
-#define DEFINE_MIDI_EP_DATA(dev)							\
-	static struct usb_ep_cfg_data usb_midi_ep_data_##dev[] = {	\
-		LISTIFY_ON_COMPAT_IN_DEVICE(LIST_ENDPOINTS, COMPAT_MIDI_ENDPOINT, dev)\
-	}; \
-	 \
-	LISTIFY_ON_COMPAT_IN_DEVICE(DEFINE_EP_ASSOC_LISTS, COMPAT_MIDI_ENDPOINT, dev)\
-	struct midi_ep_data midi_ep_list_##dev[] = {\
-		LISTIFY_ON_COMPAT_IN_DEVICE(LIST_ENPOINTS, COMPAT_MIDI_ENDPOINT, dev)\
+		.assoc.in_jacks = out_ep_in_jacks_##dev##iface##set##endpoint,\
 	};
-	
+
+#define DEFINE_INTERNAL_MIDI_1_0_IN_EP_DATA(dev, iface, set, endpoint) \
+
+#define DEFINE_INTERNAL_MIDI_1_0_EP_DATA(dev, iface, set, endpoint) 				\
+	UTIL_COND_CHOICE_N(2,	\
+		PROP_VAL_IS(ENDPOINT_N_ID(dev, iface, set, endpoint), direction, ENDPOINT_IN), \
+		PROP_VAL_IS(ENDPOINT_N_ID(dev, iface, set, endpoint), direction, ENDPOINT_OUT), \
+		(DEFINE_INTERNAL_MIDI_1_0_IN_EP_DATA(dev, iface, set, endpoint)), \
+		(DEFINE_INTERNAL_MIDI_1_0_OUT_EP_DATA(dev, iface, set, endpoint)))
+
+#define DEFINE_INTERNAL_MIDI_2_0_EP_DATA(dev, iface, set, endpoint) 				\
+// definer assoc gtoup terminals
+
+#define DEFINE_INTERNAL_EP_DATA(endpoint, dev, iface, set, _) 				\
+	UTIL_COND_CHOICE_N(2,	\
+		PROP_VAL_IS(SET_N_ID(dev, iface, set), revision, SETTING_MIDI_1_0), \
+		PROP_VAL_IS(SET_N_ID(dev, iface, set), revision, SETTING_MIDI_2_0), \
+		(DEFINE_INTERNAL_MIDI_1_0_EP_DATA(dev, iface, set, endpoint)), \
+		(DEFINE_INTERNAL_MIDI_2_0_EP_DATA(dev, iface, set, endpoint)))
+
+#define DEFINE_MIDI_EP_DATA(dev)\
+static struct usb_ep_cfg_data usb_midi_ep_data_##dev[] = {		  \
+UTIL_COND_CHOICE_N(8,								\
+	ENDPOINT_OUT_N_IS_USED(dev, 1),					\
+	ENDPOINT_OUT_N_IS_USED(dev, 2),					\
+	ENDPOINT_OUT_N_IS_USED(dev, 3),					\
+	ENDPOINT_OUT_N_IS_USED(dev, 4),					\
+	ENDPOINT_OUT_N_IS_USED(dev, 5),					\
+	ENDPOINT_OUT_N_IS_USED(dev, 6),					\
+	ENDPOINT_OUT_N_IS_USED(dev, 7),					\
+	ENDPOINT_OUT_N_IS_USED(dev, 8),					\
+	(INIT_EP_DATA(midi_receive_cb, 0x01),),			\
+	(INIT_EP_DATA(midi_receive_cb, 0x02),),			\
+	(INIT_EP_DATA(midi_receive_cb, 0x03),),			\
+	(INIT_EP_DATA(midi_receive_cb, 0x04),),			\
+	(INIT_EP_DATA(midi_receive_cb, 0x05),),			\
+	(INIT_EP_DATA(midi_receive_cb, 0x06),),			\
+	(INIT_EP_DATA(midi_receive_cb, 0x07),),			\
+	(INIT_EP_DATA(midi_receive_cb, 0x08),))			\
+UTIL_COND_CHOICE_N(8,								\
+	ENDPOINT_IN_N_IS_USED(dev, 1),					\
+	ENDPOINT_IN_N_IS_USED(dev, 2),					\
+	ENDPOINT_IN_N_IS_USED(dev, 3),					\
+	ENDPOINT_IN_N_IS_USED(dev, 4),					\
+	ENDPOINT_IN_N_IS_USED(dev, 5),					\
+	ENDPOINT_IN_N_IS_USED(dev, 6),					\
+	ENDPOINT_IN_N_IS_USED(dev, 7),					\
+	ENDPOINT_IN_N_IS_USED(dev, 8),					\
+	(INIT_EP_DATA(usb_transfer_ep_callback, 0x81),),\
+	(INIT_EP_DATA(usb_transfer_ep_callback, 0x82),),\
+	(INIT_EP_DATA(usb_transfer_ep_callback, 0x83),),\
+	(INIT_EP_DATA(usb_transfer_ep_callback, 0x84),),\
+	(INIT_EP_DATA(usb_transfer_ep_callback, 0x85),),\
+	(INIT_EP_DATA(usb_transfer_ep_callback, 0x86),),\
+	(INIT_EP_DATA(usb_transfer_ep_callback, 0x87),),\
+	(INIT_EP_DATA(usb_transfer_ep_callback, 0x88),)) \
+}; \
+\
+LISTIFY_ON_COMPAT_IN_DEVICE(DEFINE_INTERNAL_EP_DATA, COMPAT_MIDI_ENDPOINT, dev)\
+
 
 #define MIDI_DEVICE(dev, _)     \
 	DEFINE_BUF_POOL(dev)        \
+	DEFINE_MIDI_EMB_JACKS(dev) 	\
+	DEFINE_MIDI_DEV_DATA(dev)   \
 	DECLARE_MIDI_FUNCTION(dev)  \
 	DEFINE_MIDI_DESCRIPTOR(dev) \
 	DEFINE_MIDI_EP_DATA(dev)    \
-	DEFINE_MIDI_DEV_DATA(dev)   \
 	DEFINE_MIDI_DEVICE(dev)     \
-	DEFINE_MIDI_JACKS(dev)
+	DEFINE_MIDI_PORTS(dev)
 
 UTIL_LISTIFY(MIDI_DEVICE_COUNT, MIDI_DEVICE);
 
@@ -848,17 +718,62 @@ void test_func(void) {
 }
 
 
-static void midi_interface_config(struct usb_desc_header *head,
-				   uint8_t bInterfaceNumber)
-{
-
 	
-}
+
+#define LIST_EMB_JACKS_OF_PORT_CFG(index, dev, iface, set, jack)	\
+	in_port_in_jacks_##dev##iface##set##jack[index] = &emb_jacks[DECREMENT_NUM_1(DT_PROP_BY_PHANDLE_IDX(OUT_JACK_N_ID(dev, iface, set, jack), sources, index, id))];
+
+#define EMB_OUT_JACK_CFG_INIT(jack, dev, iface, set, _) 						\
+	UTIL_LISTIFY_LEVEL_4( 														\
+			DT_PROP_LEN(OUT_JACK_N_ID(dev, iface, set, jack), sources),				\
+			LIST_EMB_JACKS_OF_PORT_CFG, dev, iface, set, jack)								\
+		};	\
+	emb_out_jacks[DECREMENT_NUM_1(DT_PROP(OUT_JACK_N_ID(dev, iface, set, jack), id))] = &emb_in_jack_##dev##iface##set##jack;
+																	\
+#define EMB_JACKS_CFG_INIT(dev)\
+	LISTIFY_ON_COMPAT_IN_DEVICE(EMB_OUT_JACK_CFG_INIT, COMPAT_MIDI_OUT_JACK, dev)
+			
+
+#define LIST_EMB_JACKS_OF_ENDPOINT_CFG(index, dev, iface, set, endpoint) \
+	out_ep_in_jacks_##dev##iface##set##endpoint[index] = &emb_in_jacks[DT_PROP_BY_PHANDLE_IDX(ENDPOINT_N_ID(dev, iface, set, endpoint), assoc_entities, index, id)];
+
+#define INTERNAL_MIDI_1_0_OUT_EP_DATA_CFG_INIT(dev, iface, set, endpoint) \
+	UTIL_LISTIFY_LEVEL_4( 													\
+		DT_PROP_LEN(ENDPOINT_N_ID(dev, iface, set, endpoint), assoc_entities),				\
+		LIST_EMB_JACKS_OF_ENDPOINT_CFG, dev, iface, set, endpoint)\
+	midi_internal_ep_data[DT_PROP(ENDPOINT_N_ID(dev, iface, set, endpoint), ep_num)] = &midi_internal_ep_data_##dev##iface##set##endpoint;
+
+#define INTERNAL_MIDI_1_0_IN_EP_DATA_CFG_INIT(dev, iface, set, endpoint) \
+
+#define INTERNAL_MIDI_1_0_EP_DATA_CFG_INIT(dev, iface, set, endpoint) 				\
+	UTIL_COND_CHOICE_N(2,	\
+		PROP_VAL_IS(ENDPOINT_N_ID(dev, iface, set, endpoint), direction, ENDPOINT_IN), \
+		PROP_VAL_IS(ENDPOINT_N_ID(dev, iface, set, endpoint), direction, ENDPOINT_OUT), \
+		(INTERNAL_MIDI_1_0_IN_EP_DATA_CFG_INIT(dev, iface, set, endpoint)), \
+		(INTERNAL_MIDI_1_0_OUT_EP_DATA_CFG_INIT(dev, iface, set, endpoint)))
+
+#define INTERNAL_MIDI_2_0_EP_DATA_CFG_INIT(dev, iface, set, endpoint) 				\
+// definer assoc gtoup terminals
+
+#define INTERNAL_EP_DATA_CFG_INIT(endpoint, dev, iface, set, _) 				\
+	UTIL_COND_CHOICE_N(2,	\
+		PROP_VAL_IS(SET_N_ID(dev, iface, set), revision, SETTING_MIDI_1_0), \
+		PROP_VAL_IS(SET_N_ID(dev, iface, set), revision, SETTING_MIDI_2_0), \
+		(INTERNAL_MIDI_1_0_EP_DATA_CFG_INIT(dev, iface, set, endpoint)), \
+		(INTERNAL_MIDI_2_0_EP_DATA_CFG_INIT(dev, iface, set, endpoint)))
+
+#define MIDI_EP_DATA_CFG_INIT(dev)\
+	LISTIFY_ON_COMPAT_IN_DEVICE(INTERNAL_EP_DATA_CFG_INIT, COMPAT_MIDI_ENDPOINT, dev)\
+
+#define MIDI_DEVICE_INIT(dev, _) \
+	EMB_JACKS_CFG_INIT(dev);\
+	/*MIDI_EP_DATA_CFG_INIT(dev);*/
 
 
 
 static int usb_midi_cfg_init(const struct device *arg)
 {
+	UTIL_LISTIFY(MIDI_DEVICE_COUNT, MIDI_DEVICE_INIT);
 	return 0;
 }
 
