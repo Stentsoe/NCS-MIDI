@@ -40,10 +40,13 @@ extern "C" {
 
 typedef int (*midi_transfer)(const struct device *dev,
 				    struct net_buf *buffer,
-					size_t size);
+					size_t size,
+					void *user_data);
 
 struct midi_api {
 	midi_transfer midi_transfer;
+
+	midi_transfer midi_transfer_done;
 
 	int (*midi_callback_set)(const struct device *dev,
 						midi_transfer cb,
@@ -64,12 +67,12 @@ struct midi_api {
 static inline int midi_send(const struct device *dev,
 				    struct net_buf *buffer,
 					size_t size)
-{ 
+{
 	const struct midi_api *api =
 			(const struct midi_api *)dev->api;
     if (api != NULL) {
         if (api->midi_transfer != NULL) {
-            return api->midi_transfer(dev, buffer, size);
+            return api->midi_transfer(dev, buffer, size, NULL);
         }
     }
 	

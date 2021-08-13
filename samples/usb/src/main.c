@@ -16,21 +16,40 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define RUN_STATUS_LED DK_LED1
 #define RUN_LED_BLINK_INTERVAL 1000
 
-static int data_received(const struct device *dev,
+const struct device *midi_out_dev;
+
+static int midi_sent(const struct device *dev,
 			  struct net_buf *buffer,
-			  size_t size)
+			  size_t size,
+			  void *user_data)
 {
 
 	if (!buffer || !size) {
 		/* This should never happen */
 		return -EINVAL;
 	}
-	LOG_HEXDUMP_INF(buffer->data, size, "YO:");
 
-	LOG_INF("Received %d data, buffer %p", size, buffer);
+	LOG_INF("MIDI sent!");
 
 	net_buf_unref(buffer);
 
+	return 0;
+}
+
+static int midi_received(const struct device *dev,
+			  struct net_buf *buffer,
+			  size_t size,
+			  void *user_data)
+{
+
+	if (!buffer || !size) {
+		/* This should never happen */
+		return -EINVAL;
+	}
+	LOG_HEXDUMP_INF(buffer->data, size, "main:");
+
+	midi_send(midi_out_dev, buffer, size);
+	// net_buf_unref(buffer);
 	return 0;
 }
 
@@ -43,32 +62,36 @@ void main(void)
 	int err;
 	const struct device *usb_midi_dev;
 	const struct device *midi_in_dev;
-	const struct device *midi_out_dev;
 
 	// // LOG_INF("Entered %s", __func__);
 	usb_midi_dev = device_get_binding("MIDI");
 
 	if (!usb_midi_dev) {
 		LOG_ERR("Can not get USB MIDI Device");
-		// return;
+		return;
 	}
 
 	midi_in_dev = device_get_binding("MIDI_IN");
 	if (!midi_in_dev) {
 		LOG_ERR("Can not get MIDI IN PORT Device");
-		// return;
+		return;
 	}
 
-	err = midi_callback_set(midi_in_dev, data_received, NULL);
+	err = midi_callback_set(midi_in_dev, midi_received, NULL);
 	if (err != 0) {
 		LOG_ERR("Can not set MIDI IN callbacks");
 	}
 
-	// midi_out_dev = device_get_binding("MIDI_OUT");
-	// if (!midi_out_dev) {
-	// 	LOG_ERR("Can not get MIDI OUT PORT Device");
-	// 	// return;
-	// }
+	midi_out_dev = device_get_binding("MIDI_OUT");
+	if (!midi_out_dev) {
+		LOG_ERR("Can not get MIDI OUT PORT Device");
+		return;
+	}
+
+	err = midi_callback_set(midi_out_dev, midi_sent, NULL);
+	if (err != 0) {
+		LOG_ERR("Can not set MIDI IN callbacks");
+	}
 
 	// LOG_INF("Found USB MIDI Device");
 
