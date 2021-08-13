@@ -421,55 +421,28 @@ struct midi_ep_data *get_ep_data_by_ep_num(struct usb_midi_dev_data *midi_dev_da
 	return NULL;
 }
 
-struct midi_transfer_priv_data
-{
-	const struct device *dev;
-	struct net_buf *buffer;
-};
-
-
-static void midi_write_cb(uint8_t ep, int size, void *priv)
+int send_to_ep(const struct device *dev, struct net_buf *buffer, size_t size, void *user_data)
 {
 	struct usb_midi_out_jack_data *out_jack_data;
-	struct midi_transfer_priv_data *priv_data;
-	struct net_buf *buffer;
-	const struct device *dev;
-	LOG_INF("CBCB");
-	priv_data = priv;
-	buffer = priv_data->buffer;
-	dev = priv_data->dev;
+	uint32_t bytes_ret = 0;
+	uint8_t *ep_id = (uint8_t*)user_data;
 
 	out_jack_data = dev->data;
 
-	// LOG_INF("Written %d bytes on ep 0x%02x, *out_jack_data %p",
-	// 	size, ep, out_jack_data);
+	usb_write(*ep_id, buffer->data, size, &bytes_ret);
 
-	/* Ask installed callback to process the data.
-	 * User is responsible for freeing the buffer.
-	 * In case no callback is installed free the buffer.
-	 */
-	if (out_jack_data->api && out_jack_data->api->midi_transfer_done) {
-		out_jack_data->api->midi_transfer_done(dev,
-						     buffer, size, out_jack_data->user_data);
+	LOG_INF("pointer %p, %p", out_jack_data->api, out_jack_data->api->midi_transfer_done);
+
+
+	// TODO: fikse ordentlig callback. mulig kan bruke net buf user data, men suboptimalt, mulig kan få til å registrere i jack out apiet transfer done funksjonen. men problemet er at det ikke er garanti for at jack out kun hører til en callback. mulig en midi_data struct med net buf og cb og annen info kan brukes.
+	if (out_jack_data->api && out_jack_data->api->midi_transfer_done) 
+	{
+		out_jack_data->api->midi_transfer_done(dev, buffer, size, 
+										out_jack_data->user_data);
 	} else {
 		/* Release net_buf back to the pool */
 		net_buf_unref(buffer);
 	}
-}
-
-
-int send_to_ep(const struct device *dev, struct net_buf *buffer, size_t size, void *user_data)
-{
-	uint8_t *ep_id = (uint8_t*)user_data;
-	struct midi_transfer_priv_data priv = {
-		.dev = dev,
-		.buffer = buffer
-	};
-	
-	LOG_INF("JAAADDA");
-
-	usb_transfer(*ep_id, buffer->data, size, USB_TRANS_WRITE | USB_TRANS_NO_ZLP,
-		     midi_write_cb, &priv);
 	return 0;
 }
 
@@ -678,6 +651,7 @@ int usb_midi_in_jack_callback_set(const struct device *dev,
 				 void *user_data)
 {
 	struct usb_midi_in_jack_data *in_jack_data = dev->data;
+
 
 	in_jack_data->api->midi_transfer_done = cb; 
 	in_jack_data->user_data = user_data;

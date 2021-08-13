@@ -49,7 +49,6 @@ static int midi_received(const struct device *dev,
 	LOG_HEXDUMP_INF(buffer->data, size, "main:");
 
 	midi_send(midi_out_dev, buffer, size);
-	// net_buf_unref(buffer);
 	return 0;
 }
 
