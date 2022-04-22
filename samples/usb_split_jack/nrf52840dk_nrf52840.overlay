@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-&zephyr_udc0 {
+&usbd {
 	midi_device {
 		compatible = "usb-midi-device";
 		label = "MIDI";
@@ -18,21 +18,44 @@
 				index = <0>;
 
 				jack_1: jack_1 {
-					label = "MIDI_IN";
-					compatible = "usb-midi-jack-pair";
-					type-out = "EXTERNAL";
-					type-in = "EMBEDDED";
-					id-out = <4>;
-					id-in = <1>;
+					label = "MIDI_OUT_Embedded";
+					compatible = "usb-midi-in-jack";
+					type = "EMBEDDED";
+					id = <1>;
 				};
-
+		
 				jack_2: jack_2 {
 					label = "MIDI_OUT";
-					compatible = "usb-midi-jack-pair";
-					type-out = "EMBEDDED";
-					type-in = "EXTERNAL";
-					id-out = <3>;
-					id-in = <2>;
+					compatible = "usb-midi-in-jack";
+					type = "EXTERNAL";
+					id = <2>;
+				};
+		
+				jack_3: jack_3 {
+					label = "MIDI_IN_Embedded";
+					compatible = "usb-midi-out-jack";
+					type = "EMBEDDED";
+					sources-pins = [01];
+					sources = <&jack_2>;
+					id = <3>;
+				};
+
+				// jack_3: jack_3 {
+				// 	label = "MIDI_IO_Embedded";
+				// 	compatible = "usb-midi-out-jack";
+				// 	type = "EMBEDDED";
+				// 	sources-pins = [01];
+				// 	sources = <&jack_2>;
+				// 	id = <3>;
+				// };
+		
+				jack_4: jack_4 {
+					label = "MIDI_IN";
+					compatible = "usb-midi-out-jack";
+					type = "EXTERNAL";
+					sources = <&jack_1>;
+					sources-pins = [01];
+					id = <4>;
 				};
 		
 				ep_out_1: endpoint_out_1 {
@@ -49,7 +72,7 @@
 					direction = "IN";
 					type = "BULK";
 					ep-num = <1>;
-					assoc-entities = <&jack_2>;
+					assoc-entities = <&jack_3>;
 				};
 			};
 			
@@ -89,9 +112,3 @@
 		};
 	};
 };
-
-// &midi {
-// 	midi_device{
-// 		compatible:
-// 	}
-// }

@@ -33,7 +33,7 @@ static struct k_work_delayable uart_midi_write_work;
 
 static uint8_t uart_rx_buf[2];
 
-void uart_midi_write(struct midi_msg_t *msg)
+void uart_midi_write(midi_msg_t *msg)
 {
 	int32_t msg_delay;
 
@@ -50,7 +50,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt,
 {
 	ARG_UNUSED(dev);
 	static uint8_t *released_buf;
-	struct midi_msg_t *rx_msg;
+	midi_msg_t *rx_msg;
 	static struct midi_parser_t parser;
 
 	uint16_t timestamp;
@@ -72,7 +72,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt,
 
 		timestamp = TIMESTAMP(k_ticks_to_ms_near64(k_uptime_ticks()));
 
-		rx_msg = midi_parse_byte(timestamp, *evt->data.rx.buf, &parser);
+		rx_msg = midi_parse_serial_byte(timestamp, *evt->data.rx.buf, &parser);
 
 		if (rx_msg) {
 			k_fifo_put(&fifo_uart_rx_data, rx_msg);
@@ -108,7 +108,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt,
 
 static void uart_empty_tx_buffer_work_handler(struct k_work *item)
 {
-	struct midi_msg_t *tx_buf;
+	midi_msg_t *tx_buf;
 	int err;
 
 	tx_buf = k_fifo_get(&fifo_uart_tx_data, K_NO_WAIT);
@@ -127,7 +127,7 @@ static void uart_empty_tx_buffer_work_handler(struct k_work *item)
 
 static void uart_midi_write_work_handler(struct k_work *item)
 {
-	struct midi_msg_t *msg;
+	midi_msg_t *msg;
 	static uint8_t running_status = 0;
 	int32_t msg_delay;
 
@@ -243,11 +243,10 @@ void midi_rx_thread(void)
 
 	for (;;) {
 		/* Wait indefinitely for data to be sent over bluetooth */
-		struct midi_msg_t *msg = k_fifo_get(&fifo_uart_rx_data,
+		midi_msg_t *msg = k_fifo_get(&fifo_uart_rx_data,
 						     K_FOREVER);
 
 		/* Handle MIDI data here */
-
 		uart_midi_write(msg);
 	}
 }

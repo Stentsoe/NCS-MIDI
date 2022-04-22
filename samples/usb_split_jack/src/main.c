@@ -6,7 +6,7 @@
 #include <dk_buttons_and_leds.h>
 #include <usb/usb_device.h>
 #include <usb/class/usb_midi.h>
-#include <midi/midi.h>
+#include <drivers/midi.h>
 
 #include <logging/log.h>
 
@@ -19,34 +19,36 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 const struct device *midi_out_dev;
 
 static int midi_sent(const struct device *dev,
-			  midi_msg_t *msg,
+			  struct net_buf *buffer,
+			  size_t size,
 			  void *user_data)
 {
 
-	if (!msg) {
+	if (!buffer || !size) {
 		/* This should never happen */
 		return -EINVAL;
 	}
 
 	LOG_INF("MIDI sent!");
 
-	midi_msg_unref(msg);
+	net_buf_unref(buffer);
 
 	return 0;
 }
 
 static int midi_received(const struct device *dev,
-			  midi_msg_t *msg,
+			  struct net_buf *buffer,
+			  size_t size,
 			  void *user_data)
 {
 
-	if (!msg) {
+	if (!buffer || !size) {
 		/* This should never happen */
 		return -EINVAL;
 	}
-	LOG_HEXDUMP_INF(msg->data, msg->len, "main:");
+	LOG_HEXDUMP_INF(buffer->data, size, "main:");
 
-	midi_send(midi_out_dev, msg);
+	midi_send(midi_out_dev, buffer, size);
 	return 0;
 }
 
@@ -60,7 +62,7 @@ void main(void)
 	const struct device *usb_midi_dev;
 	const struct device *midi_in_dev;
 
-	// LOG_INF("Entered %s", __func__);
+	// // LOG_INF("Entered %s", __func__);
 	usb_midi_dev = device_get_binding("MIDI");
 
 	if (!usb_midi_dev) {

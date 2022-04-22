@@ -79,7 +79,7 @@ static struct k_work_delayable uart_midi_write_work;
 static K_THREAD_STACK_DEFINE(ble_tx_work_q_stack_area, 1024);
 static struct k_work_q ble_tx_work_q;
 
-void uart_midi_write(struct midi_msg_t *msg)
+void uart_midi_write(midi_msg_t *msg)
 {
 	int32_t msg_delay;
 
@@ -95,7 +95,7 @@ void uart_midi_write(struct midi_msg_t *msg)
 	}
 }
 
-void ble_midi_write(struct midi_msg_t *msg)
+void ble_midi_write(midi_msg_t *msg)
 {
 	k_fifo_put(&fifo_uart_rx_data, msg);
 
@@ -107,7 +107,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt,
 {
 	ARG_UNUSED(dev);
 	static uint8_t *released_buf;
-	struct midi_msg_t *rx_msg;
+	midi_msg_t *rx_msg;
 	static struct midi_parser_t parser;
 
 	uint16_t timestamp;
@@ -179,7 +179,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt,
 
 static void uart_midi_write_work_handler(struct k_work *item)
 {
-	struct midi_msg_t *msg;
+	midi_msg_t *msg;
 	static uint8_t running_status = 0;
 	int32_t msg_delay;
 
@@ -239,7 +239,7 @@ static void uart_midi_write_work_handler(struct k_work *item)
 
 static void uart_empty_tx_buffer_work_handler(struct k_work *item)
 {
-	struct midi_msg_t *tx_buf;
+	midi_msg_t *tx_buf;
 	int err;
 
 	tx_buf = k_fifo_get(&fifo_uart_tx_data, K_NO_WAIT);
@@ -270,7 +270,7 @@ static void uart_rx_enable_work_handler(struct k_work *item)
 
 static void active_sense_tx_work_handler(struct k_work *item)
 {
-	struct midi_msg_t *msg;
+	midi_msg_t *msg;
 
 	msg = k_malloc(sizeof(*msg));
 
@@ -334,7 +334,7 @@ static void ble_tx_work_handler(struct k_work *item)
 
 static void ble_midi_encode_work_handler(struct k_work *item)
 {
-	struct midi_msg_t *msg;
+	midi_msg_t *msg;
 	static uint8_t running_status = 0;
 
 	msg = k_fifo_get(&fifo_uart_rx_data, K_NO_WAIT);
@@ -612,7 +612,7 @@ static uint16_t convert_timestamp(uint16_t timestamp, uint16_t conn_interval,
 uint8_t bt_receive_cb(struct bt_conn *conn, const uint8_t *const data,
 		      uint16_t len)
 {
-	struct midi_msg_t *msg;
+	midi_msg_t *msg;
 	static struct midi_parser_t parser;
 	static uint32_t conn_time;
 

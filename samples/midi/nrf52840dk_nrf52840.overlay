@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-&zephyr_udc0 {
+ &zephyr_udc0 {
 	midi_device {
 		compatible = "usb-midi-device";
 		label = "MIDI";
@@ -18,7 +18,7 @@
 				index = <0>;
 
 				jack_1: jack_1 {
-					label = "MIDI_IN";
+					label = "USB_MIDI_IN";
 					compatible = "usb-midi-jack-pair";
 					type-out = "EXTERNAL";
 					type-in = "EMBEDDED";
@@ -27,7 +27,7 @@
 				};
 
 				jack_2: jack_2 {
-					label = "MIDI_OUT";
+					label = "USB_MIDI_OUT";
 					compatible = "usb-midi-jack-pair";
 					type-out = "EMBEDDED";
 					type-in = "EXTERNAL";
@@ -90,8 +90,24 @@
 	};
 };
 
-// &midi {
-// 	midi_device{
-// 		compatible:
-// 	}
-// }
+
+&arduino_serial {
+	current-speed = <31250>;
+    midi_serial_device {
+        label = "SERIAL_MIDI";
+        compatible = "midi-device";
+        midi_serial_in_device{
+            compatible = "midi-serial-in-device";
+            label = "SERIAL_MIDI_IN";
+        };
+    
+        midi_serial_out_device{
+            compatible = "midi-serial-out-device";
+            label = "SERIAL_MIDI_OUT";
+            handle-timestamps;
+        };
+    };
+
+};
+
+
