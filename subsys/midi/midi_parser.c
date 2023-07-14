@@ -1,6 +1,6 @@
-#include <kernel.h>
+#include <zephyr/kernel.h>
 #include "midi/midi_parser.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 #define LOG_MODULE_NAME midi_parser
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);

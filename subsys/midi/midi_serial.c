@@ -10,20 +10,19 @@
  *
  * Driver for MIDI serial
  */
-#include <kernel.h>
+#include <zephyr/kernel.h>
 #include <zephyr/types.h>
-#include <zephyr.h>
-#include <drivers/uart.h>
+#include <zephyr/drivers/uart.h>
 #include "midi_serial_internal.h"
 
 #include "midi/midi.h"
 
-#include <sys/util.h>
+#include <zephyr/sys/util.h>
 
-#include <device.h>
+#include <zephyr/device.h>
 // #include <soc.h>
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 #define LOG_MODULE_NAME midi_serial
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
@@ -397,7 +396,7 @@ void midi_tx_thread(struct midi_serial_dev_data *serial_dev_data)
 		COMPAT_MIDI_SERIAL_OUT_DEVICE, \
 		(MIDI_SERIAL_OUT_DEVICE(dev)), ())), ())
 
-UTIL_LISTIFY(MIDI_DEVICE_COUNT, MIDI_SERIAL_DEVICE);
+LISTIFY(MIDI_DEVICE_COUNT, MIDI_SERIAL_DEVICE, ());
 
 
 

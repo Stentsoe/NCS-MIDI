@@ -16,9 +16,9 @@
 
 #include <errno.h>
 #include <stddef.h>
-#include <kernel.h>
+#include <zephyr/kernel.h>
 
-#include <device.h>
+#include <zephyr/device.h>
 
 #ifdef __cplusplus
 extern "C" {

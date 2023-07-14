@@ -7,9 +7,9 @@
  */
 // #include <kernel.h>
 // #include <device.h>
-#include "usb/class/usb_midi.h"
+// #include "usb/class/usb_midi.h"
 #include "sys/util_macro_expansion.h"
-#include <sys/util_internal.h>
+#include <zephyr/sys/util_internal.h>
 
 #ifndef ZEPHYR_INCLUDE_MIDI_SERIAL_INTERNAL_H_
 #define ZEPHYR_INCLUDE_MIDI_SERIAL_INTERNAL_H_

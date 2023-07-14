@@ -10,7 +10,7 @@
 
 
 #include <stdbool.h>
-#include <zephyr.h>
+// #include <zephyr.h>
 #include <zephyr/types.h>
 #include <midi/midi.h>
 
