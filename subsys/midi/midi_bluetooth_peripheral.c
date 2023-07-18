@@ -167,7 +167,6 @@ static int  send_to_bluetooth_port(const struct device *dev,
 	out = midi_bluetooth_device_data->out;
 	
 	if (current_conn) {
-		// LOG_INF("skjer1");
 		k_fifo_put(&fifo_tx_data, msg);
 		err = k_work_submit_to_queue(&ble_tx_work_q, &ble_midi_encode_work);
 	} else {
@@ -185,9 +184,7 @@ static int  send_to_bluetooth_port(const struct device *dev,
 static void ble_tx_work_handler(struct k_work *item)
 {
 	if (ble_midi_pck_len != 0) {
-		// LOG_INF("skjer tx handler");
 		bt_midi_send(current_conn, ble_midi_pck, ble_midi_pck_len);
-		// LOG_INF("skjer tx handler2");
 		ble_midi_pck_len = 0;
 	}
 }
@@ -198,7 +195,6 @@ static void ble_midi_encode_work_handler(struct k_work *item)
 	static uint8_t running_status = 0;
 	struct midi_bluetooth_out_dev_data *out;
 	out = midi_bluetooth_device_data->out;
-	// LOG_INF("skjer2");
 	msg = k_fifo_get(&fifo_tx_data, K_NO_WAIT);
 	/** Process received MIDI message and prepare BLE packet */
 	if (msg) {
@@ -238,9 +234,7 @@ static void ble_midi_encode_work_handler(struct k_work *item)
 		ble_midi_pck_len++;
 		
 		/** Add MIDI message to packet and free memory */
-		LOG_INF("tx1");
 		memcpy((ble_midi_pck + ble_midi_pck_len), msg->data, msg->len);
-		LOG_INF("tx2");
 		ble_midi_pck_len += msg->len;
 		
 		if(out->api->midi_transfer_done) {
@@ -422,9 +416,7 @@ static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data,
 			next_is_new_timestamp = true;
 
 			rx_msg = midi_msg_alloc(NULL, 1);
-			LOG_INF("bt_receive_cb1");
 			memcpy(rx_msg->data, &current_byte, 1);
-			LOG_INF("bt_receive_cb2");
 			rx_msg->format = MIDI_FORMAT_1_0_SERIAL;
 			rx_msg->len = 1;
 			rx_msg->timestamp = timestamp;

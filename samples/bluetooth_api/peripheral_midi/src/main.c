@@ -75,17 +75,13 @@ static int midi_serial_received(const struct device *dev,
 			  midi_msg_t *msg,
 			  void *user_data)
 {
-	LOG_INF("m1");
 	midi_msg_t *parsed_msg = midi_parse_serial(msg, &serial_parser);
-	LOG_INF("m2");
 	midi_msg_unref(msg);
-	// LOG_INF("midi_serial_received 3");
+
 	if (parsed_msg) {
 		LOG_HEXDUMP_INF(parsed_msg->data, parsed_msg->len, "parsed:");
 		midi_send(bluetooth_midi_out_dev, parsed_msg);
-		// LOG_INF("skjer0 %p", bluetooth_midi_out_dev);
 	}
-	// LOG_INF("midi_serial_received 4");
 	return 0;
 }
 
@@ -95,16 +91,13 @@ const struct device * get_port(const char* name,
 	int err;
 	const struct device * dev;
 	dev = device_get_binding(name);
-	LOG_INF("1");
 	if (!dev) {
 		LOG_ERR("Can not get device: %s", name);
 	}
-	LOG_INF("2 %p", dev);
 	err = midi_callback_set(dev, cb, user_data);
 	if (err != 0) {
 		LOG_ERR("Can not set callbacks for device: %s", name);
 	}
-	LOG_INF("3");
 	return dev;
 }
 
@@ -121,11 +114,9 @@ void main(void)
 	serial_midi_out_dev = get_port("SERIAL_MIDI_OUT", 
 			midi_serial_sent, NULL);
 
-	LOG_INF("Running2");
 	/*BLUETOOTH PORTS*/
 	bluetooth_midi_in_dev = get_port("BLUETOOTH_MIDI_IN", 
 			midi_bluetooth_received, NULL);
-	LOG_INF("Running3");
 	bluetooth_midi_out_dev = get_port("BLUETOOTH_MIDI_OUT", 
 			midi_bluetooth_sent, NULL);
 

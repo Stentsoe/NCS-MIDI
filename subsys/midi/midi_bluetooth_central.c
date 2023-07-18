@@ -177,7 +177,7 @@ static int  send_to_bluetooth_port(const struct device *dev,
 	out = midi_bluetooth_device_data->out;
 	
 	if (current_conn) {
-		// LOG_INF("skjer1");
+
 		k_fifo_put(&fifo_tx_data, msg);
 		err = k_work_submit_to_queue(&ble_tx_work_q, &ble_midi_encode_work);
 	} else {
