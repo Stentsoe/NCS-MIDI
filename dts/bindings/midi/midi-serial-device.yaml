@@ -5,7 +5,7 @@
 
 description: MIDI.
 
-compatible: "midi-device"
+compatible: "midi-serial-device"
 
 properties:
   label:

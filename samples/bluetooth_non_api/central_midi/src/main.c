@@ -619,7 +619,6 @@ uint8_t bt_receive_cb(struct bt_conn *conn, const uint8_t *const data,
 	uint8_t current_byte;
 	uint16_t timestamp_ble;
 	uint16_t timestamp;
-
 	uint16_t interval;
 
 	rx_time = k_uptime_get();

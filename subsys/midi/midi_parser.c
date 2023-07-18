@@ -44,7 +44,9 @@ static bool parse_serial_byte(uint16_t timestamp, uint8_t byte,
 				LOG_WRN("could not allocate midi buffer!");
 				return false;
 			}
+			LOG_INF("parse11");
 			memcpy(msg->data, &byte, 1);
+			LOG_INF("parse12");
 			// msg->data = byte;
 			msg->len = 1;
 
@@ -55,7 +57,9 @@ static bool parse_serial_byte(uint16_t timestamp, uint8_t byte,
 	if (parser->third_byte_flag == true) {
 		/** Expected third, and last, byte of message */
 		parser->third_byte_flag = false;
+		LOG_INF("parse21");
 		memcpy(msg->data+2, &byte, 1);
+		LOG_INF("parse22");
 		// msg->data[2] = byte;
 		msg->len = 3;
 		return true;
@@ -78,9 +82,14 @@ static bool parse_serial_byte(uint16_t timestamp, uint8_t byte,
 			LOG_WRN("could not allocate midi buffer!");
 			return false;
 		}
+		LOG_INF("parse31, %p, %p", (void*)msg->data, (void*)&running_status);
 		memcpy(msg->data, &running_status, 1);
+		
+		LOG_INF("parse32");
 		// msg->data[0] = running_status;
 		memcpy(msg->data+1, &byte, 1);
+		
+		LOG_INF("parse33");
 		// msg->data[1] = byte;
 		msg->len = 2;
 		
@@ -93,8 +102,13 @@ static bool parse_serial_byte(uint16_t timestamp, uint8_t byte,
 			LOG_WRN("could not allocate midi buffer!");
 			return false;
 		}
+		LOG_INF("parse41");
 		memcpy(msg->data, &running_status, 1);
+		
+		LOG_INF("parse42");
 		memcpy(msg->data+1, &byte, 1);
+		
+		LOG_INF("parse43");
 		// msg->data[1] = byte;
 		msg->len = 2;
 		return true;
@@ -110,8 +124,11 @@ static bool parse_serial_byte(uint16_t timestamp, uint8_t byte,
 			LOG_WRN("could not allocate midi buffer!");
 			return false;
 		}
+		LOG_INF("parse51");
 		memcpy(msg->data, &running_status, 1);
+		LOG_INF("parse52");
 		memcpy(msg->data+1, &byte, 1);
+		LOG_INF("parse53");
 		msg->len = 2;
 		parser->running_status = 0;
 		return false;
@@ -125,8 +142,11 @@ static bool parse_serial_byte(uint16_t timestamp, uint8_t byte,
 			LOG_WRN("could not allocate midi buffer!");
 			return false;
 		}
+		LOG_INF("parse61");
 		memcpy(msg->data, &running_status, 1);
+		LOG_INF("parse62");
 		memcpy(msg->data+1, &byte, 1);
+		LOG_INF("parse63");
 		msg->len = 2;
 		parser->running_status = 0;
 		return true;
@@ -151,7 +171,9 @@ midi_msg_t *parse_serial_rtm(uint16_t timestamp, uint8_t byte)
 		if (!msg) {
 			return NULL;
 		}
+		LOG_INF("parse01");
 		memcpy(msg->data, &byte, 1);
+		LOG_INF("parse02");
 		msg->len = 1;
 		msg->timestamp = timestamp;
 

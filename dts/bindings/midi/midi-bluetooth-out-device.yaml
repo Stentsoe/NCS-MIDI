@@ -5,10 +5,7 @@
 
 description: MIDI.
 
-compatible: "midi-serial-in-device"
+compatible: "midi-bluetooth-out-device"
 
-include: midi-serial-device.yaml
+include: midi-bluetooth-device.yaml
 
-
-
-    

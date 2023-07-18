@@ -310,12 +310,7 @@ void midi_tx_thread(struct midi_serial_dev_data *serial_dev_data)
 }
 
 #define DEFINE_MIDI_SERIAL_IN_DEV_DATA(dev)										\
-	/*static uint8_t uart_rx_buf##dev[2];*/ \
-	static struct midi_serial_in_dev_data midi_serial_in_dev_data_##dev; /*= {*		\
-		.rx_buffer[0].format = uart_rx_buf##dev,								\
-		midi_serial_in_dev_data_##dev.rx_buffer[0].format = MIDI_FORMAT_1_0_SERIAL,						\
-		midi_serial_in_dev_data_##dev.rx_buffer[1].format = MIDI_FORMAT_1_0_SERIAL,						\
-	};	*/																		\
+	static struct midi_serial_in_dev_data midi_serial_in_dev_data_##dev; 			
 
 #define DEFINE_MIDI_SERIAL_OUT_DEV_DATA(dev)									\
 	static struct midi_serial_out_dev_data midi_serial_out_dev_data_##dev = {	\
@@ -325,19 +320,19 @@ void midi_tx_thread(struct midi_serial_dev_data *serial_dev_data)
 	};																			\
 
 #define DEFINE_MIDI_SERIAL_DEV_DATA(dev)				\
-	COND_NODE_HAS_COMPAT_CHILD(MIDI_DEV_N_ID(dev), 		\
+	COND_NODE_HAS_COMPAT_CHILD(MIDI_SERIAL_DEV_N_ID(dev), 		\
 		COMPAT_MIDI_SERIAL_IN_DEVICE, 					\
 		(DEFINE_MIDI_SERIAL_IN_DEV_DATA(dev)), ()) 		\
-	COND_NODE_HAS_COMPAT_CHILD(MIDI_DEV_N_ID(dev), 		\
+	COND_NODE_HAS_COMPAT_CHILD(MIDI_SERIAL_DEV_N_ID(dev), 		\
 		COMPAT_MIDI_SERIAL_OUT_DEVICE, 					\
 		(DEFINE_MIDI_SERIAL_OUT_DEV_DATA(dev)), ())		\
 	static struct midi_serial_dev_data midi_serial_dev_data_##dev = {	\
 		.uart_dev = DEVICE_DT_GET(SERIAL_DEV_N_ID(dev)),				\
-		COND_NODE_HAS_COMPAT_CHILD(MIDI_DEV_N_ID(dev), 					\
+		COND_NODE_HAS_COMPAT_CHILD(MIDI_SERIAL_DEV_N_ID(dev), 					\
 			COMPAT_MIDI_SERIAL_IN_DEVICE, 								\
 			(.in = &midi_serial_in_dev_data_##dev, ),				\
 			(.in = NULL,)) 												\
-		COND_NODE_HAS_COMPAT_CHILD(MIDI_DEV_N_ID(dev), 					\
+		COND_NODE_HAS_COMPAT_CHILD(MIDI_SERIAL_DEV_N_ID(dev), 					\
 			COMPAT_MIDI_SERIAL_OUT_DEVICE, 								\
 			(.out = &midi_serial_out_dev_data_##dev,), 				\
 			(.out = NULL,))												\
@@ -345,7 +340,6 @@ void midi_tx_thread(struct midi_serial_dev_data *serial_dev_data)
 
 #define DEFINE_MIDI_IN_DEVICE(dev)					  			\
 	static struct midi_api midi_serial_in_api_##dev = {			\
-	/*	.midi_transfer = send_to_serial_port,	*/				\
 		.midi_callback_set = midi_serial_in_port_callback_set,	\
 	};															\
 	DEVICE_DT_DEFINE(SERIAL_IN_DEV_N_ID(dev),			  			\
@@ -389,10 +383,10 @@ void midi_tx_thread(struct midi_serial_dev_data *serial_dev_data)
 	COND_CODE_1(UTIL_AND(DT_NODE_HAS_COMPAT(SERIAL_DEV_N_ID(dev), \
 		nordic_nrf_uarte), DT_NODE_HAS_STATUS(SERIAL_DEV_N_ID(dev), okay)),( \
 	DEFINE_MIDI_SERIAL_DEV_DATA(dev)\
-	COND_NODE_HAS_COMPAT_CHILD(MIDI_DEV_N_ID(dev), \
+	COND_NODE_HAS_COMPAT_CHILD(MIDI_SERIAL_DEV_N_ID(dev), \
 		COMPAT_MIDI_SERIAL_IN_DEVICE, \
 		(MIDI_SERIAL_IN_DEVICE(dev)), ()) \
-	COND_NODE_HAS_COMPAT_CHILD(MIDI_DEV_N_ID(dev), \
+	COND_NODE_HAS_COMPAT_CHILD(MIDI_SERIAL_DEV_N_ID(dev), \
 		COMPAT_MIDI_SERIAL_OUT_DEVICE, \
 		(MIDI_SERIAL_OUT_DEVICE(dev)), ())), ())
 

@@ -7,7 +7,7 @@ description: MIDI.
 
 compatible: "midi-serial-out-device"
 
-include: midi-device.yaml
+include: midi-serial-device.yaml
 
 properties:
   handle-timestamps:

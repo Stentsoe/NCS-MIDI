@@ -16,4 +16,10 @@ config MIDI_SYNC
 	bool "MIDI sync library"
 
 config MIDI_SERIAL
-	bool "MIDI sync library"
+	bool "MIDI serial library"
+
+config MIDI_BLUETOOTH_PERIPHERAL
+	bool "MIDI bluetooth peripheral library"
+
+config MIDI_BLUETOOTH_CENTRAL
+	bool "MIDI bluetooth central library"

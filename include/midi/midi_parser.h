@@ -22,6 +22,9 @@ extern "C" {
 #define DEFINE_MIDI_PARSER_SERIAL(_name) \
 	struct midi_serial_parser _name;
 
+#define DEFINE_MIDI_PARSER_BLUETOOTH(_name) \
+	 DEFINE_MIDI_PARSER_SERIAL(_name)
+
 #define DEFINE_MIDI_PARSER_USB(_name) \
 	struct midi_usb_parser _name;
 
