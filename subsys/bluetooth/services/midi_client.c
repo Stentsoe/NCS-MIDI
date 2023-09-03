@@ -1,11 +1,11 @@
-#include <bluetooth/conn.h>
-#include <bluetooth/uuid.h>
-#include <bluetooth/gatt.h>
+#include <zephyr/bluetooth/conn.h>
+#include <zephyr/bluetooth/uuid.h>
+#include <zephyr/bluetooth/gatt.h>
 
 #include <bluetooth/services/midi.h>
 #include <bluetooth/services/midi_client.h>
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(bt_midi_client, CONFIG_BT_MIDI_CLIENT_LOG_LEVEL);
 
 enum {

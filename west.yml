@@ -8,6 +8,7 @@
 #
 
 manifest:
+  version: "0.12"
   remotes:
       # nRF Connect SDK base URL.
     - name: ncs
@@ -18,7 +19,7 @@ manifest:
     - name: nrf
       remote: ncs
       repo-path: sdk-nrf
-      revision: 8a1eb9b9fd51477f76d97deea126a5095de7de44
+      revision: e8babf47e0b51aa0b4661eda59656d27eb0a9915
       import: true
   # Committed on Oct 15 
 

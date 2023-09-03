@@ -1,0 +1,3 @@
+if(CONFIG_USB_DEVICE_STACK)
+  add_subdirectory(class)
+endif()

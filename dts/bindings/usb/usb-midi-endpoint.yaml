@@ -1,0 +1,51 @@
+# Copyright (c) 2020 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+# Specific fields for USB MIDI OUT jack.
+
+description: USB MIDI endpoint.
+
+compatible: "usb-midi-endpoint"
+
+properties:
+  direction:
+    type: string
+    required: true
+    description: Direction of the endpoint
+    enum:
+        - "IN"
+        - "OUT"
+  
+  ep-num:
+    type: int
+    required: true
+    description: Endpoint number from 1 to 8.
+    enum:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+      - 7
+      - 8
+
+  type:
+    type: string
+    required: false
+    default: "BULK"
+    description: Type of endppoint, Bulk or Interrupt. Interrupt is only used for MIDI 2.0.
+    enum:
+      - "BULK"
+      - "INTERRUPT"
+
+  interval:
+    type: int
+    required: false
+    default: 0
+    description: Intervall for polling endpoint Interrupt data transfers.
+      
+  assoc-entities:
+    type: phandles
+    required: false
+    description: Jacks or group terminals connected to this endpoint.

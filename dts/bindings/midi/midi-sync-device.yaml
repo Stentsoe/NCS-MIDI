@@ -1,0 +1,25 @@
+# Copyright (c) 2020 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+# Specific fields for MIDI device.
+
+description: MIDI.
+
+compatible: "midi-sync-device"
+
+properties:
+  label:
+    required: true
+    type: string
+    description: Human readable string describing the device (used as device_get_binding() argument)
+
+  id-in:
+    type: int
+    required: true
+    description: ID of the MIDI IN jack
+  
+  id-out:
+    type: int
+    required: true
+    description: ID of the MIDI OUT jack
+

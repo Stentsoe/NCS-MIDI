@@ -1,0 +1,10 @@
+# USB device stack configuration options
+
+# Copyright (c) 2016 Wind River Systems, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+if USB_DEVICE_STACK
+
+rsource "class/Kconfig"
+
+endif # USB_DEVICE_STACK

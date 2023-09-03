@@ -1,0 +1,114 @@
+/*
+ * Copyright (c) 2019 Nordic Semiconductor ASA
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+&usbd {
+	midi_device {
+		compatible = "usb-midi-device";
+		label = "MIDI";
+
+		midi_interface_1 {
+			compatible = "usb-midi-interface";
+			index = <1>;
+			setting_0 {
+				compatible = "usb-midi-setting";
+				revision = "MIDI 1.0";
+				index = <0>;
+
+				jack_1: jack_1 {
+					label = "MIDI_OUT_Embedded";
+					compatible = "usb-midi-in-jack";
+					type = "EMBEDDED";
+					id = <1>;
+				};
+		
+				jack_2: jack_2 {
+					label = "MIDI_OUT";
+					compatible = "usb-midi-in-jack";
+					type = "EXTERNAL";
+					id = <2>;
+				};
+		
+				jack_3: jack_3 {
+					label = "MIDI_IN_Embedded";
+					compatible = "usb-midi-out-jack";
+					type = "EMBEDDED";
+					sources-pins = [01];
+					sources = <&jack_2>;
+					id = <3>;
+				};
+
+				// jack_3: jack_3 {
+				// 	label = "MIDI_IO_Embedded";
+				// 	compatible = "usb-midi-out-jack";
+				// 	type = "EMBEDDED";
+				// 	sources-pins = [01];
+				// 	sources = <&jack_2>;
+				// 	id = <3>;
+				// };
+		
+				jack_4: jack_4 {
+					label = "MIDI_IN";
+					compatible = "usb-midi-out-jack";
+					type = "EXTERNAL";
+					sources = <&jack_1>;
+					sources-pins = [01];
+					id = <4>;
+				};
+		
+				ep_out_1: endpoint_out_1 {
+					compatible = "usb-midi-endpoint";
+					direction = "OUT";
+					type = "BULK";
+					ep-num = <1>;
+					assoc-entities = <&jack_1>;
+					
+				};
+		
+				ep_in_1: endpoint_in_1 {
+					compatible = "usb-midi-endpoint";
+					direction = "IN";
+					type = "BULK";
+					ep-num = <1>;
+					assoc-entities = <&jack_3>;
+				};
+			};
+			
+			setting_1 {
+				compatible = "usb-midi-setting";
+				revision = "MIDI 2.0";
+				index = <1>;
+
+				ep_out_2: endpoint_out_2 {
+					compatible = "usb-midi-endpoint";
+					direction = "OUT";
+					type = "BULK";
+					ep-num = <5>;
+					assoc-entities = <&gt_1>;
+					
+				};
+		
+				ep_in_2: endpoint_in_2 {
+					compatible = "usb-midi-endpoint";
+					direction = "IN";
+					type = "INTERRUPT";
+					ep-num = <5>;
+					assoc-entities = <&gt_1>;
+					interval = <1>;
+				};
+		
+				gt_1: gt_1 {
+					compatible = "usb-midi-group-terminal-block";
+					id = <1>;
+					type = "IN-OUT";
+					group-terminal = <0>;
+					num-group-terminals = <1>;
+					protocol = "UNKNOWN";
+					in-bandwidth = <1>;
+				};
+			};
+		};
+	};
+};

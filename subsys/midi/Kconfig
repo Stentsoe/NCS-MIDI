@@ -1,0 +1,25 @@
+#
+# Copyright (c) 2019 Nordic Semiconductor ASA
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+
+
+config MIDI
+	bool "MIDI library"
+
+config MIDI_PARSER
+	bool "MIDI parser library"
+
+config MIDI_SYNC
+	bool "MIDI sync library"
+
+config MIDI_SERIAL
+	bool "MIDI serial library"
+
+config MIDI_BLUETOOTH_PERIPHERAL
+	bool "MIDI bluetooth peripheral library"
+
+config MIDI_BLUETOOTH_CENTRAL
+	bool "MIDI bluetooth central library"
