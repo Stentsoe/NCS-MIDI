@@ -25,7 +25,7 @@
 	pinctrl-1 = <&uart0_sleep>;
     midi_serial_device {
         label = "SERIAL_MIDI";
-        compatible = "midi-device";
+        compatible = "midi-serial-device";
         midi_serial_in_device{
             compatible = "midi-serial-in-device";
             label = "SERIAL_MIDI_IN";

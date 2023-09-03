@@ -51,7 +51,6 @@ void main(void)
 	int err;
 
 	serial_midi_in_dev = device_get_binding("SERIAL_MIDI_IN");
-
 	if (!serial_midi_in_dev) {
 		LOG_ERR("Can not get serial MIDI Device");
 	}
@@ -62,7 +61,6 @@ void main(void)
 	}
 
 	serial_midi_out_dev = device_get_binding("SERIAL_MIDI_OUT");
-
 	if (!serial_midi_out_dev) {
 		LOG_ERR("Can not get serial MIDI Device");
 		// return;
