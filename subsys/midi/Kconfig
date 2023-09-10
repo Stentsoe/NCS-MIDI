@@ -23,3 +23,9 @@ config MIDI_BLUETOOTH_PERIPHERAL
 
 config MIDI_BLUETOOTH_CENTRAL
 	bool "MIDI bluetooth central library"
+
+config MIDI_ISO_BROADCASTER
+	bool "MIDI iso broadcaster library"
+
+config MIDI_ISO_RECEIVER
+	bool "MIDI iso receiver library"

@@ -506,8 +506,6 @@ static int midi_bluetooth_out_device_init(const struct device *dev)
 	bluetooth_dev_data->out->dev = dev;
 	bluetooth_dev_data->out->api = (struct midi_api*)dev->api;
 
-
-
 	k_work_queue_start(&ble_tx_work_q, ble_tx_work_q_stack_area,
 			   K_THREAD_STACK_SIZEOF(ble_tx_work_q_stack_area), -2,
 			   NULL);

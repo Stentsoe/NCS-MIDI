@@ -151,12 +151,12 @@ static void send_work_handler(struct k_work *work)
 	// }
 	ret = bt_iso_chan_send(&bis_iso_chan[0], buf,
 					seq_num, BT_ISO_TIMESTAMP_NONE);
-		if (ret < 0) {
-			LOG_ERR("Unable to broadcast data on"
-					" : %d", ret);
-			net_buf_unref(buf);
-			return;
-		}
+	if (ret < 0) {
+		LOG_ERR("Unable to broadcast data on"
+				" : %d", ret);
+		net_buf_unref(buf);
+		return;
+	}
 	
 	iso_send_count++;
 	seq_num++;
