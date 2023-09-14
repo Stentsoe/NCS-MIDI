@@ -1,14 +1,13 @@
 #include <zephyr/types.h>
-#include <zephyr.h>
-#include <device.h>
+#include <zephyr/device.h>
 #include <soc.h>
 
 #include <dk_buttons_and_leds.h>
-#include <usb/usb_device.h>
+#include <zephyr/usb/usb_device.h>
 #include <usb/class/usb_midi.h>
 #include <midi/midi.h>
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 #define LOG_MODULE_NAME USB_midi
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);

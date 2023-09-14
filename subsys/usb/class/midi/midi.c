@@ -11,18 +11,18 @@
  * Driver for USB MIDI device class driver
  */
 
-#include <kernel.h>
-#include <usb/usb_device.h>
+#include <zephyr/kernel.h>
+#include <zephyr/usb/usb_device.h>
 #include <usb_descriptor.h>
 #include <usb/class/usb_midi.h>
 #include "usb_midi_internal.h"
 
 #include "midi/midi.h"
 
-#include <sys/byteorder.h>
-#include <sys/util.h>
+#include <zephyr/sys/byteorder.h>
+#include <zephyr/sys/util.h>
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(usb_midi, CONFIG_USB_MIDI_LOG_LEVEL);
 
 enum midi_revision {
@@ -362,20 +362,30 @@ static int midi_class_handle_req(struct usb_setup_packet *pSetup,
 
 static struct usb_midi_jack_pair_data *get_midi_emb_jack_pair_by_in_cable_number(uint8_t cable_num)
 {
-	// struct usb_midi_jack_pair_data *jack_pair_data;
 	static sys_snode_t *jack_pair_node;
+	struct usb_midi_jack_pair_data *temp_jack_pair_data;
+	struct usb_midi_jack_pair_data *matched_jack_pair_data = NULL;
 	
 	jack_pair_node = sys_slist_peek_head(&usb_midi_jack_pair_list);
 	if(!jack_pair_node) {
 		return NULL;
 	}
-
-	for (size_t i = 0; i < cable_num; i++)
-	{
-		jack_pair_node = sys_slist_peek_next_no_check(jack_pair_node);
+	temp_jack_pair_data = CONTAINER_OF(jack_pair_node, struct usb_midi_jack_pair_data, node);
+	if (temp_jack_pair_data->cfg->type_in == EMBEDDED) {
+		matched_jack_pair_data = temp_jack_pair_data;
 	}
 
-	return CONTAINER_OF(jack_pair_node, struct usb_midi_jack_pair_data, node);
+	for (size_t i = 0; i <= cable_num; i++)
+	{
+		jack_pair_node = sys_slist_peek_next_no_check(jack_pair_node);
+		temp_jack_pair_data = CONTAINER_OF(jack_pair_node, struct usb_midi_jack_pair_data, node);
+		if (temp_jack_pair_data->cfg->type_in == EMBEDDED) {
+			matched_jack_pair_data = temp_jack_pair_data;
+		} else {
+			i--;
+		}
+	}
+	return matched_jack_pair_data;
 }
 
 static struct usb_midi_jack_pair_data *get_midi_emb_jack_pair_by_out_id(uint8_t id)
@@ -543,7 +553,8 @@ static void midi_receive_cb(uint8_t ep, enum usb_dc_ep_cb_status_code status)
 			return;
 		}
 		LOG_INF("CB3 %d", n_pending_bytes);
-
+		msg->len = 4;
+		msg->format = MIDI_FORMAT_1_0_USB;
 		if (!n_pending_bytes) {
 			midi_msg_unref(msg);
 			return;
@@ -727,7 +738,7 @@ int usb_midi_jack_pair_callback_set(const struct device *dev,
 	DEFINE_MIDI_DEVICE(dev)   	\
 	DEFINE_MIDI_JACKS(dev) 
 
-UTIL_LISTIFY(USB_MIDI_DEVICE_COUNT, MIDI_DEVICE);
+LISTIFY(USB_MIDI_DEVICE_COUNT, MIDI_DEVICE, ());
 
 #define	TEST_STRING					\
 	STRINGIFY(						\

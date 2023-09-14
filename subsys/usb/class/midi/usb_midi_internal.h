@@ -9,7 +9,7 @@
 
 #include "usb/class/usb_midi.h"
 #include "sys/util_macro_expansion.h"
-#include <sys/util_internal.h>
+#include <zephyr/sys/util_internal.h>
 
 #ifndef ZEPHYR_INCLUDE_USB_CLASS_MIDI_INTERNAL_H_
 #define ZEPHYR_INCLUDE_USB_CLASS_MIDI_INTERNAL_H_
