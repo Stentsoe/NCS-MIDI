@@ -124,14 +124,19 @@ int midi_iso_broadcaster_port_callback_set(const struct device *dev,
 	return -ENOTSUP;
 }
 
-static inline uint8_t calculate_timestamp(int64_t *reftime)
+static inline uint8_t calculate_timestamp(int64_t uptime, int64_t reftime)
 {
-	int64_t uptime, delta;
+	int64_t delta;
+	uint8_t timestamp;
 
-	uptime = k_ticks_to_us_floor64(k_uptime_ticks());
-	delta = uptime - *reftime;
-	*reftime = uptime;
-	return (uint8_t)((delta*127)/BIG_SDU_INTERVAL_US);
+	if(uptime <= reftime) {
+		timestamp = 0;
+	} else {
+		delta = uptime - reftime;
+		timestamp = (uint8_t)((delta*127)/BIG_SDU_INTERVAL_US);
+	}
+	
+	return timestamp;
 }
 
 static int  send_to_iso_broadcaster_port(const struct device *dev,
@@ -139,7 +144,8 @@ static int  send_to_iso_broadcaster_port(const struct device *dev,
 							void *user_data)
 {
 	int err;
-	msg->timestamp = (uint16_t)calculate_timestamp(&ref_time);
+
+	msg->uptime = k_ticks_to_us_floor64(k_uptime_ticks());
     k_fifo_put(&fifo_tx_data, msg);
     err = k_work_submit_to_queue(&iso_tx_work_q, &iso_encode_packet_work);
 
@@ -178,7 +184,7 @@ static void iso_encode_packet_work_handler(struct k_work *item)
     msg = k_fifo_get(&fifo_tx_data, K_NO_WAIT);
 
     if (msg) {
-        
+        msg->timestamp = calculate_timestamp(msg->uptime, ref_time);
         net_buf_add_u8(current_buf, (0x80 | (uint8_t)msg->timestamp));
         net_buf_add_mem(current_buf, msg->data, msg->len);
         new_data_len += msg->len + 1;
@@ -223,38 +229,38 @@ static int midi_iso_broadcaster_device_init(const struct device *dev)
 	if (err) {
 		LOG_ERR("Bluetooth unable to initialize (err: %d)", err);
 	}
-	// LOG_INF("2");
+	
     err = bt_le_ext_adv_create(BT_LE_EXT_ADV_NCONN_NAME, NULL, &adv);
 	if (err) {
 		LOG_ERR("Failed to create advertising set (err %d)", err);
 		return 0;
 	}
-// LOG_INF("3");
+	
     err = bt_le_per_adv_set_param(adv, BT_LE_PER_ADV_DEFAULT);
 	if (err) {
 		LOG_ERR("Failed to set periodic advertising parameters"
 		       " (err %d)", err);
 		return 0;
 	}
-// LOG_INF("4");
+	
     err = bt_le_per_adv_start(adv);
 	if (err) {
 		LOG_ERR("Failed to enable periodic advertising (err %d)", err);
 		return 0;
 	}
-// LOG_INF("5");
+	
     err = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
 	if (err) {
 		LOG_ERR("Failed to start extended advertising (err %d)", err);
 		return 0;
 	}
-// LOG_INF("6");
+	
     err = bt_iso_big_create(adv, &big_create_param, &big);
 	if (err) {
 		LOG_ERR("Failed to create BIG (err %d)", err);
 		return 0;
 	}
-    // LOG_INF("7");
+	
 	err = k_sem_take(&sem_big_cmplt, K_FOREVER);
 	if (err) {
 		LOG_ERR("failed (err %d)", err);
@@ -280,11 +286,11 @@ void midi_iso_tx_thread(struct midi_iso_broadcaster_dev_data *iso_dev_data)
         if (!current_buf) {
             LOG_ERR("Data buffer allocate timeout on channel isr");
         }
+		net_buf_reserve(current_buf, BT_ISO_CHAN_SEND_RESERVE);
 
         if(previous_buf) {
             if(previous_buf->len) {
                 previous_len = net_buf_remove_u8(previous_buf);
-                LOG_INF("previos buf len %d", previous_len);
                 net_buf_add_mem(current_buf, net_buf_remove_mem(previous_buf, previous_len), previous_len);
             }
             net_buf_unref(previous_buf);

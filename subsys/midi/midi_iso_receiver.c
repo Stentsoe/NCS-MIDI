@@ -290,24 +290,23 @@ static midi_msg_t * parse_next(struct net_buf *buf) {
      return NULL;
 }
 
-static inline uint16_t calculate_timestamp(int64_t uptime, uint8_t timestamp)
+static inline uint16_t calculate_timestamp(uint16_t waited_time_sum, uint8_t timestamp)
 {
-	int64_t delta;
-	delta = ((127 & timestamp) * (big_interval)) / 128;
-	LOG_INF("delta %ld", delta);
-    return TIMESTAMP(uptime + delta);
+	uint16_t delta;
+	delta = (timestamp * (big_interval*1000)) / 128;
+
+	return (uint16_t)delta - waited_time_sum;
 }
 
 static void iso_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info *info,
 		struct net_buf *buf)
 {
     int64_t uptime;
-
 	uptime = k_ticks_to_ms_floor64(k_uptime_ticks());
-	LOG_INF("Uptime %ld",  TIMESTAMP(uptime) );
-	LOG_HEXDUMP_INF(buf->data, buf->len, "data");
+	LOG_HEXDUMP_INF(buf->data, buf->len, "data: ");
     uint8_t new_data_len;
     uint8_t timestamp;
+	uint16_t waited_time_sum = 0;
     
     midi_msg_t * parsed_msg; 
 
@@ -317,26 +316,37 @@ static void iso_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info *in
         LOG_INF("Previous packet was lost process retransmit data!");
         while (buf->len < new_data_len)
         {
+			
             timestamp = net_buf_pull_u8(buf);
+
             parsed_msg = parse_next(buf);
+			
             if (parsed_msg) {
+				parsed_msg->timestamp = 0;
+				parsed_msg->format = MIDI_FORMAT_1_0_PARSED_DELTA_US;
                 if(iso_dev_data->api->midi_transfer_done)  {
                     iso_dev_data->api->midi_transfer_done(
                             iso_dev_data->dev, parsed_msg, iso_dev_data->user_data);
                 } else {
                     midi_msg_unref(parsed_msg);
+					
+	
                 }
             }
         }
     } else {
+		
         net_buf_pull_mem(buf, buf->len - new_data_len);
+		
         while (buf->len)
         {
             timestamp = net_buf_pull_u8(buf);
             parsed_msg = parse_next(buf);
             if (parsed_msg) {
-                parsed_msg->timestamp = calculate_timestamp(uptime, timestamp);
-				LOG_INF(" olde %d new timestamp %d", (127 & timestamp), parsed_msg->timestamp);
+				parsed_msg->format = MIDI_FORMAT_1_0_PARSED_DELTA_US;
+                parsed_msg->timestamp = calculate_timestamp(waited_time_sum, (127 & timestamp));
+
+				waited_time_sum += parsed_msg->timestamp;
                 if(iso_dev_data->api->midi_transfer_done)  {
                     iso_dev_data->api->midi_transfer_done(
                             iso_dev_data->dev, parsed_msg, iso_dev_data->user_data);
@@ -346,24 +356,7 @@ static void iso_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info *in
             }
         }
     }
-	// for (size_t i = 0; i < buf->len; i++)
-	// {	
-	// 	serial_msg = midi_msg_alloc(NULL, 1);
-	// 	memcpy(serial_msg->data, (void*)(buf->data + i), 1);
-	// 	serial_msg->format = MIDI_FORMAT_1_0_SERIAL;
-	// 	serial_msg->len = 1;
-		
-	// 	// serial_msg = midi_msg_alloc(serial_msg, 1);
-	// 	// memcpy(serail_msg->data, (void*)(buf->data + i), 1);
-	// 	LOG_INF("serial byte: %d", *serial_msg->data); 	
-	// 	parsed_msg = midi_parse_serial(serial_msg, &serial_parser);
-	// 	midi_msg_unref(serial_msg);
-	// 	if (parsed_msg)
-	// 	{
-	// 		midi_send(serial_midi_out_dev, parsed_msg);
-	// 		parsed_msg = NULL;
-	// 	}
-	// }
+
 	previous_seq_num = info->seq_num;
 	iso_recv_count++;
 }
@@ -371,7 +364,6 @@ static void iso_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info *in
 static void iso_connected(struct bt_iso_chan *chan)
 {
 	LOG_INF("ISO Channel %p connected\n", chan);
-	// k_sem_give(&sem_big_sync);
 }
 
 static void iso_disconnected(struct bt_iso_chan *chan, uint8_t reason)
@@ -380,7 +372,6 @@ static void iso_disconnected(struct bt_iso_chan *chan, uint8_t reason)
 	       chan, reason);
 
 	if (reason != BT_HCI_ERR_OP_CANCELLED_BY_HOST) {
-		// k_sem_give(&sem_big_sync_lost);
 	}
 }
 
@@ -417,9 +408,6 @@ static int midi_iso_receiver_device_init(const struct device *dev)
 {
 	int err;
     
-	// struct bt_le_per_adv_sync_param sync_create_param;
-
-
 	iso_dev_data = dev->data;
 
 	iso_dev_data->dev = dev;

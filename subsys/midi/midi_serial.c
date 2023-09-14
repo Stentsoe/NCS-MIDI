@@ -20,7 +20,6 @@
 #include <zephyr/sys/util.h>
 
 #include <zephyr/device.h>
-// #include <soc.h>
 
 #include <zephyr/logging/log.h>
 
@@ -261,7 +260,8 @@ static int send_to_serial_port(const struct device *dev,
 	struct midi_serial_out_dev_data *out = serial_dev_data->out;
 
 	if((msg->format != MIDI_FORMAT_1_0_SERIAL) &
-	   (msg->format != MIDI_FORMAT_1_0_PARSED)) {
+	   (msg->format != MIDI_FORMAT_1_0_PARSED) &
+	   (msg->format != MIDI_FORMAT_1_0_PARSED_DELTA_US)) {
 		LOG_WRN("Tried to send wrong format on serial port. format: %d", msg->format);
 		return -EINVAL;
 	}
@@ -282,7 +282,7 @@ void midi_tx_thread(struct midi_serial_dev_data *serial_dev_data)
 	midi_msg_t *msg = NULL;
 
 	for (;;) {
-		/* Wait indefinitely for data to be sent over bluetooth */
+		/* Wait indefinitely for data to be sent over bluetooth NOTE: ???*/
 		k_sem_take(&out->tx_sem, K_FOREVER);
 		if (msg) {
 			if(out->api->midi_transfer_done) {
@@ -294,14 +294,17 @@ void midi_tx_thread(struct midi_serial_dev_data *serial_dev_data)
 		msg = k_fifo_get(&out->tx_queue, K_FOREVER);
 		if (out->timestamp_setting == MIDI_TIMESTAMP_ON)
 		{
-			msg_delay = (int32_t)((msg->timestamp) -
-				(k_ticks_to_ms_near32((uint32_t)k_uptime_ticks()) % 8192));
-
-			if (msg_delay > 0) {
-				k_sleep(K_MSEC(msg_delay));
+			if (msg->format == MIDI_FORMAT_1_0_PARSED_DELTA_US) {
+				k_sleep(K_USEC(msg->timestamp));
+			} else {
+				msg_delay = (int32_t)((msg->timestamp) -
+					(k_ticks_to_ms_near32((uint32_t)k_uptime_ticks()) % 8192));
+				if (msg_delay > 0) {
+					k_sleep(K_MSEC(msg_delay));
+				}
 			}
-		}
 		
+		}
 		if(uart_tx(serial_dev_data->uart_dev, 
 				msg->data, msg->len, SYS_FOREVER_MS)) {
 			LOG_WRN("Failed to send uart midi");

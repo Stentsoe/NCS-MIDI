@@ -31,6 +31,7 @@ enum midi_format {
 	MIDI_FORMAT_1_0_PARSED,
 	MIDI_FORMAT_1_0_SERIAL,
 	MIDI_FORMAT_1_0_USB,
+	MIDI_FORMAT_1_0_PARSED_DELTA_US,
 };
 
 /** @brief Struct holding a MIDI message. */
@@ -47,6 +48,8 @@ typedef struct {
 	uint8_t len;
 	/** reference count */
 	uint8_t ref;
+	/*uptime. NOTE: THIS VARIABLE IS A TEMPORARY WORKAROUND*/
+	int64_t uptime;
 } midi_msg_t;
 
 /**

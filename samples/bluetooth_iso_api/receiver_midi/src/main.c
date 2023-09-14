@@ -35,8 +35,12 @@ static int midi_iso_received(const struct device *dev,
 			  void *user_data)
 {
 	LOG_INF("MIDI ISO received!");
-
-	midi_send(serial_midi_out_dev, msg);
+	int err;
+	err = midi_send(serial_midi_out_dev, msg);
+	if (err) {
+		LOG_ERR("unable to send midi err: %d", err);
+		LOG_HEXDUMP_DBG(msg->data, msg->len,"error data:");
+	}
 
 	return 0;
 }
@@ -59,10 +63,6 @@ static int midi_serial_received(const struct device *dev,
 	midi_msg_t *parsed_msg = midi_parse_serial(msg, &serial_parser);
 	midi_msg_unref(msg);
 
-	if (parsed_msg) {
-		LOG_HEXDUMP_INF(parsed_msg->data, parsed_msg->len, "parsed:");
-		midi_send(iso_midi_in_dev, parsed_msg);
-	}
 	return 0;
 }
 
