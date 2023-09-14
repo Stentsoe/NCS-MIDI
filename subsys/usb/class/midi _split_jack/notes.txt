@@ -1,4 +1,0 @@
-Not supported: 
-- Elements
-- A, embedded out jack may not be associated with multiple Endpoints. It is unclear if the specification allows this anyways.
-- Endpoints are not freely assignable. Each endpoint in descriptor will get uniques number even though they are of different settings.
