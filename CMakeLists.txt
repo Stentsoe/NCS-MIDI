@@ -1,5 +1,5 @@
 # Point to NCS root directory.
-set(NRF_DIR ${CMAKE_CURRENT_LIST_DIR} CACHE PATH "NCS root directory")
+set(NRF_MIDI_DIR ${CMAKE_CURRENT_LIST_DIR} CACHE PATH "NCS root directory")
 
 # We need to cache the build type so that it is not out of sync when CONF_FILE
 # is cached.

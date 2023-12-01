@@ -19,7 +19,7 @@ manifest:
     - name: nrf
       remote: ncs-midi
       repo-path: sdk-nrf-midi
-      revision: c0b06a886668e64c54cbdf0ed92dfb254398990b
+      revision: e12dd694736fe9c85980916e1d5628374b4c3623
       import: true
   # Committed on Oct 15 
 

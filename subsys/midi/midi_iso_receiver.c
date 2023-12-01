@@ -40,7 +40,6 @@ static bool         big_synced;
 static bt_addr_le_t per_addr;
 static uint8_t      per_sid;
 static uint32_t     per_interval_us;
-
 static uint32_t     iso_recv_count;
 
 struct bt_le_per_adv_sync *sync;
@@ -49,28 +48,15 @@ static struct bt_iso_big_sync_param big_sync_param;
 
 struct midi_iso_receiver_dev_data *iso_dev_data;
 
-static K_SEM_DEFINE(sem_per_adv, 0, 1);
-static K_SEM_DEFINE(sem_per_sync, 0, 1);
-static K_SEM_DEFINE(sem_per_sync_lost, 0, 1);
-static K_SEM_DEFINE(sem_per_big_info, 0, 1);
-
-
 DEFINE_MIDI_PARSER_SERIAL(iso_serial_parser);
-
-// static K_SEM_DEFINE(sem_big_sync, 0, BIS_ISO_CHAN_COUNT);
-// static K_SEM_DEFINE(sem_big_sync_lost, 0, BIS_ISO_CHAN_COUNT);
 
 uint16_t previous_seq_num;
 uint64_t big_interval;
 
 struct midi_iso_receiver_dev_data {
-
 	struct midi_api *api;
-
 	const struct device *dev;
-
 	void *user_data;
-
 };
 
 int midi_iso_scan(const struct device *dev) 
@@ -191,8 +177,6 @@ static void sync_cb(struct bt_le_per_adv_sync *sync,
 	       "Interval 0x%04x (%u ms), PHY %s\n",
 	       bt_le_per_adv_sync_get_index(sync), le_addr,
 	       info->interval, info->interval * 5 / 4, phy2str(info->phy));
-
-	// k_sem_give(&sem_per_sync);
     
 }
 
@@ -207,7 +191,6 @@ static void term_cb(struct bt_le_per_adv_sync *sync,
 	       bt_le_per_adv_sync_get_index(sync), le_addr);
 
 	per_adv_lost = true;
-	// k_sem_give(&sem_per_sync_lost);
 }
 
 static void recv_cb(struct bt_le_per_adv_sync *sync,
@@ -250,15 +233,14 @@ static void biginfo_cb(struct bt_le_per_adv_sync *sync,
 	       biginfo->encryption ? "" : "not ");
 
 
-	// k_sem_give(&sem_per_big_info);
-if (!big_synced) {
-    big_synced = true;
-    err = bt_iso_big_sync(sync, &big_sync_param, &big);
-    if (err) {
-        LOG_ERR("big sync failed (err %d)\n", err);
-        return;
-    }
-}
+	if (!big_synced) {
+		big_synced = true;
+		err = bt_iso_big_sync(sync, &big_sync_param, &big);
+		if (err) {
+			LOG_ERR("big sync failed (err %d)\n", err);
+			return;
+		}
+	}
     
 }
 
@@ -269,15 +251,16 @@ static struct bt_le_per_adv_sync_cb sync_callbacks = {
 	.biginfo = biginfo_cb,
 };
 
-static midi_msg_t * parse_next(struct net_buf *buf) {
-    
+static midi_msg_t * parse_next(struct net_buf *buf) 
+{
     midi_msg_t * serial_msg; 
     midi_msg_t * parsed_msg = NULL; 
     uint8_t byte;
-
+	
     while (!parsed_msg) {
         serial_msg = midi_msg_alloc(NULL, 1);
         byte = net_buf_pull_u8(buf);
+		LOG_INF("byte %x", byte);
         memcpy(serial_msg->data, &byte, 1);
         serial_msg->format = MIDI_FORMAT_1_0_SERIAL;
         serial_msg->len = 1;
@@ -286,14 +269,14 @@ static midi_msg_t * parse_next(struct net_buf *buf) {
         if (parsed_msg) {
             return parsed_msg;
         }
-    }
-     return NULL;
+	}
+    return NULL;
 }
 
 static inline uint16_t calculate_timestamp(uint16_t waited_time_sum, uint8_t timestamp)
 {
 	uint16_t delta;
-	delta = (timestamp * (big_interval*1000)) / 128;
+	delta = (timestamp * (big_interval*1000)) / 127;
 
 	return (uint16_t)delta - waited_time_sum;
 }
@@ -301,62 +284,33 @@ static inline uint16_t calculate_timestamp(uint16_t waited_time_sum, uint8_t tim
 static void iso_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info *info,
 		struct net_buf *buf)
 {
-    int64_t uptime;
-	uptime = k_ticks_to_ms_floor64(k_uptime_ticks());
-	LOG_HEXDUMP_INF(buf->data, buf->len, "data: ");
     uint8_t new_data_len;
     uint8_t timestamp;
 	uint16_t waited_time_sum = 0;
-    
-    midi_msg_t * parsed_msg; 
+    midi_msg_t * parsed_msg;
 
-    new_data_len = net_buf_remove_u8(buf);
-
-    if ((previous_seq_num + 1) != info->seq_num) {
-        LOG_INF("Previous packet was lost process retransmit data!");
-        while (buf->len < new_data_len)
-        {
-			
-            timestamp = net_buf_pull_u8(buf);
-
-            parsed_msg = parse_next(buf);
-			
-            if (parsed_msg) {
-				parsed_msg->timestamp = 0;
-				parsed_msg->format = MIDI_FORMAT_1_0_PARSED_DELTA_US;
-                if(iso_dev_data->api->midi_transfer_done)  {
-                    iso_dev_data->api->midi_transfer_done(
-                            iso_dev_data->dev, parsed_msg, iso_dev_data->user_data);
-                } else {
-                    midi_msg_unref(parsed_msg);
-					
+    new_data_len = net_buf_pull_u8(buf);
 	
-                }
-            }
-        }
-    } else {
-		
-        net_buf_pull_mem(buf, buf->len - new_data_len);
-		
-        while (buf->len)
-        {
-            timestamp = net_buf_pull_u8(buf);
-            parsed_msg = parse_next(buf);
-            if (parsed_msg) {
-				parsed_msg->format = MIDI_FORMAT_1_0_PARSED_DELTA_US;
-                parsed_msg->timestamp = calculate_timestamp(waited_time_sum, (127 & timestamp));
+	while (new_data_len)
+	{
+		timestamp = net_buf_pull_u8(buf);
+		new_data_len --;
 
-				waited_time_sum += parsed_msg->timestamp;
-                if(iso_dev_data->api->midi_transfer_done)  {
-                    iso_dev_data->api->midi_transfer_done(
-                            iso_dev_data->dev, parsed_msg, iso_dev_data->user_data);
-                } else {
-                    midi_msg_unref(parsed_msg);
-                }
-            }
-        }
-    }
+		parsed_msg = parse_next(buf);
+		if (parsed_msg) {
+			parsed_msg->format = MIDI_FORMAT_1_0_PARSED_DELTA_US;
+			parsed_msg->timestamp = calculate_timestamp(waited_time_sum, (127 & timestamp));
+			new_data_len -= parsed_msg->len;
+			waited_time_sum += parsed_msg->timestamp;
 
+			if(iso_dev_data->api->midi_transfer_done)  {
+				iso_dev_data->api->midi_transfer_done(
+						iso_dev_data->dev, parsed_msg, iso_dev_data->user_data);
+			} else {
+				midi_msg_unref(parsed_msg);
+			}
+		}
+	}
 	previous_seq_num = info->seq_num;
 	iso_recv_count++;
 }
@@ -444,8 +398,6 @@ static int midi_iso_receiver_device_init(const struct device *dev)
 			    NULL, APPLICATION,	  							\
 			    CONFIG_KERNEL_INIT_PRIORITY_DEVICE,		  		\
 			    &midi_iso_receiver_api_##dev);
-
-
 
 #define MIDI_ISO_RECEIVER_DEVICE(dev, _) \
 	COND_CODE_1(UTIL_AND(DT_NODE_HAS_COMPAT(RADIO_DEV_N_ID(dev),\

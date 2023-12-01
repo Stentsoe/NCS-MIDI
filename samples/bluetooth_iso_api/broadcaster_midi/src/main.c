@@ -68,6 +68,7 @@ const struct device * get_port(const char* name,
 
 	if (!dev) {
 		LOG_ERR("Can not get device: %s", name);
+		return ENODEV;
 	}
 
 	err = midi_callback_set(dev, cb, user_data);
@@ -90,7 +91,6 @@ void main(void)
 	
 	serial_midi_out_dev = get_port("SERIAL_MIDI_OUT", 
 			midi_serial_sent, NULL);
-
 
 	/*ISO PORTS*/
 	iso_midi_out_dev = get_port("ISO_MIDI_BROADCASTER", 
