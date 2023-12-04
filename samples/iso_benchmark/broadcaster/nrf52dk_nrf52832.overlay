@@ -1,0 +1,50 @@
+&radio{
+	midi_iso_device {
+		compatible = "midi-iso-device";
+		label = "ISO_MIDI";
+		midi_iso_broadcast_device {
+			label = "ISO_MIDI_BROADCASTER";
+			compatible = "midi-iso-broadcaster-device";
+		};
+    };
+};
+
+/ {
+	send_message_in: send_message_in {
+		compatible = "test-output-gpio";
+                /* using built-in LED pin for demonstration */
+		gpios = <&gpio0 23  (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+	};
+};
+
+/ {
+	test_gpio_out_0: test_gpio_out_0 {
+		compatible = "test-output-gpio";
+                /* using built-in LED pin for demonstration */
+		gpios = <&gpio0 11  (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+	};
+};
+
+/ {
+	test_gpio_out_1: test_gpio_out_1 {
+		compatible = "test-output-gpio";
+                /* using built-in LED pin for demonstration */
+		gpios = <&gpio0 12  (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+	};
+};
+
+/ {
+	test_gpio_out_2: test_gpio_out_2 {
+		compatible = "test-output-gpio";
+                /* using built-in LED pin for demonstration */
+		gpios = <&gpio0 13  (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+	};
+};
+
+/ {
+	test_gpio_out_3: test_gpio_out_3 {
+		compatible = "test-output-gpio";
+                /* using built-in LED pin for demonstration */
+		gpios = <&gpio0 14  (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+	};
+};

@@ -1,0 +1,13 @@
+# Copyright (c) 2023 Libre Solar Technologies GmbH
+# SPDX-License-Identifier: Apache-2.0
+
+description: GPIO pin used for testing
+
+compatible: "test-input-gpio"
+
+properties:
+  gpios:
+    type: phandle-array
+    required: true
+    description: |
+      Output GPIO used for testing.

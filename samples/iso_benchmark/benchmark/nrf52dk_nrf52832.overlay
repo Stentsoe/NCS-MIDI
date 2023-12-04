@@ -1,0 +1,63 @@
+/ {
+	packet_lost_in: packet_lost_in {
+		compatible = "test-input-gpio";
+                /* using built-in LED pin for demonstration */
+		gpios = <&gpio0 19  (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+	};
+};
+
+/ {
+	message_rdy_in: message_rdy_in {
+		compatible = "test-input-gpio";
+                /* using built-in LED pin for demonstration */
+		gpios = <&gpio0 20  (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+	};
+};
+
+/ {
+	message_sent_in: message_sent_in {
+		compatible = "test-input-gpio";
+                /* using built-in LED pin for demonstration */
+		gpios = <&gpio0 22  (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+	};
+};
+
+/ {
+	send_message_out: send_message_out {
+		compatible = "test-output-gpio";
+                /* using built-in LED pin for demonstration */
+		gpios = <&gpio0 23  (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+	};
+};
+
+/ {
+	test_gpio_in_0: test_gpio_in_0 {
+		compatible = "test-input-gpio";
+                /* using built-in LED pin for demonstration */
+		gpios = <&gpio0 11  (GPIO_PULL_DOWN | GPIO_ACTIVE_LOW)>;
+	};
+};
+
+/ {
+	test_gpio_in_1: test_gpio_in_1 {
+		compatible = "test-input-gpio";
+                /* using built-in LED pin for demonstration */
+		gpios = <&gpio0 12  (GPIO_PULL_DOWN | GPIO_ACTIVE_LOW)>;
+	};
+};
+
+/ {
+	test_gpio_in_2: test_gpio_in_2 {
+		compatible = "test-input-gpio";
+                /* using built-in LED pin for demonstration */
+		gpios = <&gpio0 13  (GPIO_PULL_DOWN | GPIO_ACTIVE_LOW)>;
+	};
+};
+
+/ {
+	test_gpio_in_3: test_gpio_in_3 {
+		compatible = "test-input-gpio";
+                /* using built-in LED pin for demonstration */
+		gpios = <&gpio0 14  (GPIO_PULL_DOWN | GPIO_ACTIVE_LOW)>;
+	};
+};
