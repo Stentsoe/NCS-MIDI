@@ -1,0 +1,131 @@
+Broadcaster init
+iso.c           hci_le_big_complete
+iso.C           store_bis_broadcaster_info
+
+
+
+
+
+main.c          bt_iso_chan_send()
+iso.c           bt_conn_send_iso_cb()
+conn.c          bt_conn_send_cb()
+conn.c          net_buf_put()
+--->tx_queue--->
+conn.C          bt_conn_process_tx()
+conn.C          send_buf()
+conn.C          send_frag()
+conn.C          do_send_frag()
+conn.C          send_iso()
+conn.C          bt_send()                   00 20 08 00  a2 0b 04 00  92 de 00 00
+hci_core.C      bt_dev.drv->send()
+hci_driver.C    hci_driver_send()           01 20 08 00  cf 12 04 00  cf 12 00 00
+hci_driver.C    iso_handle()
+hci_driver.C    hci_iso_handle()
+hci.c           isoal_tx_sdu_fragment()     67 03 00 00  
+isoal.c         isoal_tx_unframed_produce()
+isoal.C         isoal_tx_try_emit_pdu()
+isoal.C         isoal_tx_pdu_emit()
+isoal.C         source_ctx->session.pdu_emit()
+ull_iso.c       ll_iso_tx_mem_enqueue()
+ull_iso.C       memq_enqueue()
+
+lll_adv_iso.C       isr_tx_common()
+    lll_adv_iso.C       memq_dequeue()
+    lll_adv_iso.c       radio_pkt_tx_set()
+
+
+
+
+
+
+
+RX
+
+lll_sync_iso.C      isr_rx_done
+    lll_sync_iso.C      iso_rx_put
+    ull_iso.C           ll_iso_rx_put 
+
+>>>---memq_ll_iso_rx--->>>
+
+hci_driver.c        prio_recv_thread
+    hci_driver.c        ll_iso_rx_dequeue
+    hci_driver.c        k_fifo_put
+
+>>>---recv_fifo--->>>
+
+hci_driver.c        recv_thread
+    hci_driver.C        process_node
+    hci_driver.C        encode_node
+    isoal.C             isoal_rx_pdu_recombine
+    isoal.C             isoal_rx_unframed_consume
+
+
+core page 2835
+
+
+
+
+
+CONFIG_BT=y
+
+CONFIG_BT_ISO_BROADCASTER=y
+CONFIG_LOG=y
+CONFIG_BT_DEVICE_NAME="Test ISO Broadcaster"
+
+CONFIG_BT_ISO_MAX_CHAN=2
+CONFIG_BT_ISO_TX_BUF_COUNT=8
+
+# Just needs to send a uint32_t value
+CONFIG_BT_ISO_TX_MTU=16
+CONFIG_BT_CTLR_ADV_ISO=y
+CONFIG_BT_LL_SW_SPLIT=y
+CONFIG_BT_CTLR_ADV_ISO_PDU_LEN_MAX=16
+
+CONFIG_BT_CTLR_ADV_ISO_STREAM_MAX=2
+# CONFIG_BT_CTLR_CONN_ISO=y
+CONFIG_BT_CTLR_ISOAL_SOURCES=2
+
+# FIXME: Host needs CONFIG_BT_ISO_TX_MTU + 4 bytes for sequence number, and
+# optionally additional + 4 bytes for timestamp when not using
+# BT_ISO_TIMESTAMP_NONE in bt_iso_chan_send(), otherwise Host tries to fragment
+# ISO data.
+# When Host is fixed, CONFIG_BT_CTLR_ISO_TX_BUFFER_SIZE can inherit the
+# CONFIG_BT_ISO_TX_MTU value.
+CONFIG_BT_CTLR_ISO_TX_BUFFER_SIZE=20
+CONFIG_BT_CTLR_ISOAL_SN_STRICT=n
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CONFIG_BT=y
+CONFIG_BT_ISO_SYNC_RECEIVER=y
+CONFIG_LOG=y
+CONFIG_BT_DEVICE_NAME="Test ISO Receive"
+
+CONFIG_BT_LL_SW_SPLIT=y
+CONFIG_BT_ISO_MAX_CHAN=2
+
+CONFIG_BT_CTLR_SYNC_ISO=y
+CONFIG_BT_CTLR_SYNC_ISO_PDU_LEN_MAX=251
+CONFIG_BT_CTLR_SYNC_ISO_STREAM_MAX=2
+CONFIG_BT_CTLR_ISOAL_SINKS=2
+
+# CONFIG_BT_ISO_LOG_LEVEL_DBG=y
+
+CONFIG_ISO_PRINT_INTERVAL=28

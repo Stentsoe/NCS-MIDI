@@ -1,0 +1,51 @@
+&pinctrl {
+	uart0_default: uart0_default {
+		group1 {
+			psels = <NRF_PSEL(UART_RX, 1, 1)>;
+			bias-pull-up;
+		};
+		group2 {
+			psels = <NRF_PSEL(UART_TX, 1, 2)>;
+		};
+	};
+
+	uart0_sleep: uart0_sleep {
+		group1 {
+			psels = <NRF_PSEL(UART_RX, 1, 1)>,
+				<NRF_PSEL(UART_TX, 1, 2)>;
+			low-power-enable;
+		};
+	};
+};
+
+&uart0 {
+	current-speed = <31250>;
+    pinctrl-0 = <&uart0_default>;
+	pinctrl-1 = <&uart0_sleep>;
+    midi_serial_device {
+        label = "SERIAL_MIDI";
+        compatible = "midi-serial-device";
+        midi_serial_in_device{
+            compatible = "midi-serial-in-device";
+            label = "SERIAL_MIDI_IN";
+        };
+    
+        midi_serial_out_device{
+            compatible = "midi-serial-out-device";
+            label = "SERIAL_MIDI_OUT";
+            handle-timestamps;
+        };
+    };
+
+};
+
+&radio{
+	midi_iso_device {
+		compatible = "midi-iso-device";
+		label = "ISO_MIDI";
+		midi_iso_broadcast_device {
+			label = "ISO_MIDI_RECEIVER";
+			compatible = "midi-iso-receiver-device";
+		};
+    };
+};

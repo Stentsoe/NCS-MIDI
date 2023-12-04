@@ -1,0 +1,13 @@
+# Copyright (c) 2020 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+# Specific fields for MIDI device.
+
+description: MIDI.
+
+compatible: "midi-iso-broadcaster-device"
+
+include: midi-iso-device.yaml
+
+
+

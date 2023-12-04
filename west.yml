@@ -8,17 +8,18 @@
 #
 
 manifest:
+  version: "0.12"
   remotes:
       # nRF Connect SDK base URL.
-    - name: ncs
-      url-base: https://github.com/nrfconnect
+    - name: ncs-midi
+      url-base: https://github.com/stentsoe
   # The list of external projects for the nRF Connect SDK.
   #
   projects:
     - name: nrf
-      remote: ncs
-      repo-path: sdk-nrf
-      revision: 8a1eb9b9fd51477f76d97deea126a5095de7de44
+      remote: ncs-midi
+      repo-path: sdk-nrf-midi
+      revision: e12dd694736fe9c85980916e1d5628374b4c3623
       import: true
   # Committed on Oct 15 
 

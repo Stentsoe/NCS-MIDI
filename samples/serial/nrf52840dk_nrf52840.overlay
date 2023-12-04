@@ -1,4 +1,0 @@
-&arduino_serial {
-	current-speed = <31250>;
-};
-

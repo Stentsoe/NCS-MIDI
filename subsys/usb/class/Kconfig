@@ -1,0 +1,3 @@
+# USB class drivers configuration options
+
+rsource "midi/Kconfig"

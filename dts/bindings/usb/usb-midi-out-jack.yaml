@@ -1,0 +1,41 @@
+# # Copyright (c) 2020 Nordic Semiconductor ASA
+# # SPDX-License-Identifier: Apache-2.0
+
+# # Specific fields for USB MIDI OUT jack.
+
+# description: USB MIDI OUT jack.
+
+# compatible: "usb-midi-out-jack"
+
+# properties:
+#   label:
+#     type: string
+#     required: true
+#     description: String identifying the jack. Will be encoded into string descriptor, as well as being used to get port device genrated by external enpoints.
+
+#   type:
+#     type: string
+#     required: true
+#     description: type of the MIDI OUT jack, embedded or external
+#     enum:
+#            - "EMBEDDED"
+#            - "EXTERNAL"
+#   id:
+#     type: int
+#     required: true
+#     description: ID of the MIDI OUT jack
+
+#   sources:
+#     type: phandles
+#     required: false
+#     description: Pointers to the in jack of wich the jack is connected.
+
+#   sources-pins:
+#     type: uint8-array
+#     required: false
+#     description: Pin number of connected source entities. Number of pins must match number of sources.
+
+#   string:
+#     type: string
+#     required: false
+#     description: String describing the MIDI OUT Jack
