@@ -68,7 +68,7 @@ const struct device * get_port(const char* name,
 
 	if (!dev) {
 		LOG_ERR("Can not get device: %s", name);
-		return ENODEV;
+		return NULL;
 	}
 
 	err = midi_callback_set(dev, cb, user_data);
