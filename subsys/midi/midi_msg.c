@@ -38,6 +38,48 @@ midi_msg_t  * __must_check midi_msg_alloc(midi_msg_t * msg, size_t size)
 	return msg;
 }
 
+midi_msg_t  * __must_check midi_msg_init(struct net_buf *buf,
+						uint8_t *data, uint8_t len, enum midi_format format,
+						void *context, uint16_t timestamp, int64_t uptime, 
+						uint8_t num, uint8_t ack_channel)
+{
+
+	midi_msg_t *msg = k_malloc(sizeof(midi_msg_t));
+	if (!msg) {
+		return NULL;
+	}
+
+	msg->data = data;
+	msg->len = len;
+	msg->ref = 1;
+	msg->format = format;
+	msg->context = context;
+	msg->buf = net_buf_ref(buf);
+	msg->timestamp = timestamp;
+	msg->uptime = uptime;
+	msg->num = num;
+	msg->ack_channel = ack_channel;
+    
+	return msg;
+}
+
+midi_msg_t  * __must_check midi_msg_init_alloc(midi_msg_t * msg, uint8_t len, 
+								enum midi_format format, void *context) 
+{
+	msg = midi_msg_alloc(msg, len);
+	if (!msg)
+	{
+		LOG_INF("failed to alloc midi msg");
+		return NULL;
+	}
+	
+	msg->len = len;
+	msg->format = format;
+	msg->context = context;
+    
+	return msg;
+}
+
 midi_msg_t * __must_check midi_msg_ref(midi_msg_t *msg) 
 {
 	if (!msg) {
@@ -46,6 +88,27 @@ midi_msg_t * __must_check midi_msg_ref(midi_msg_t *msg)
 
 	msg->ref++;
 	return msg;
+}
+
+void midi_msg_unref_alt(midi_msg_t *msg) 
+{
+	if (!msg) {
+		return;
+	}
+
+    if (msg->ref == 0) {
+		net_buf_unref(msg->buf);
+		k_free(msg);
+		return;
+	}
+
+	if (--msg->ref > 0) {
+		return;
+	}
+
+	net_buf_unref(msg->buf);
+	k_free(msg);
+	return;
 }
 
 void midi_msg_unref(midi_msg_t *msg) 
@@ -68,15 +131,3 @@ void midi_msg_unref(midi_msg_t *msg)
 	k_free(msg);
 	return;
 }
-
-// midi_msg_t * __must_check 
-// 	midi_msg_set(midi_msg_t *msg, uint8_t pos, uint8_t *data, size_t size)
-// {
-// 	if (!msg || !msg.data) {
-// 		return NULL;
-// 	}
-
-// 	memcpy(msg.data+pos, data, size);
-
-// 	return msg.data;
-// }

@@ -1,0 +1,68 @@
+source "Kconfig.zephyr"
+
+config PRODUCT_ID
+    string "Product ID"
+    default "0x0001"
+    help
+      Product ID
+
+config MIDI_TEST_MODE
+    bool "MIDI Test Mode"
+    default n
+    help
+      MIDI Test Mode
+
+if MIDI_TEST_MODE
+
+config MIDI_TEST_DROP_FIRST_IRC
+    bool "Drop first irc"
+    default n
+
+config MIDI_TEST_DROP_FIRST_IRC_RATE
+    int "Drop first IRC rate"
+    depends on MIDI_TEST_DROP_FIRST_IRC
+    default 2 if MIDI_TEST_DROP_FIRST_2ND
+    default 16 if MIDI_TEST_DROP_FIRST_16TH
+    help
+      Drop first IRC rate
+
+config MIDI_TEST_DROP_SECOND_IRC
+    bool "Drop second irc"
+    default n
+
+config MIDI_TEST_DROP_SECOND_IRC_RATE
+    int "Drop second IRC rate"
+    depends on MIDI_TEST_DROP_SECOND_IRC
+    default 2 if MIDI_TEST_DROP_SECOND_2ND
+    default 16 if MIDI_TEST_DROP_SECOND_16TH
+    help
+      Drop second IRC rate
+
+# config MIDI_TEST_DROP_PACKET_RATE
+#     int "Drop packet rate"
+#     default 100
+#     help
+#       Drop packet rate
+
+choice MIDI_TEST_MODE_CHOICE
+    prompt "MIDI Test Mode Choice"
+    default MIDI_TEST_DROP_FIRST_16TH
+    config MIDI_TEST_DROP_FIRST_2ND
+        bool "Drop first immediate reptiotion transaction every 2nd packet"
+        select MIDI_TEST_DROP_FIRST_IRC
+
+    config MIDI_TEST_DROP_FIRST_16TH
+        bool "Drop first immediate reptiotion transaction every 16th packet"
+        select MIDI_TEST_DROP_FIRST_IRC
+
+    config MIDI_TEST_DROP_SECOND_2ND
+        bool "Drop second immediate reptiotion transaction every 2nd packet"
+        select MIDI_TEST_DROP_SECOND_IRC
+
+    config MIDI_TEST_DROP_SECOND_16TH
+        bool "Drop second immediate reptiotion transaction every 16th packet"
+        select MIDI_TEST_DROP_SECOND_IRC
+
+endchoice
+
+endif # MIDI_TEST_MODE

@@ -76,6 +76,10 @@ struct midi_serial_dev_data {
 
 };
 
+uint8_t buffer_1[16];
+uint8_t buffer_2[16];
+uint8_t *buffers[2] = {buffer_1, buffer_2};
+
 
 static void uart_cb(const struct device *dev, struct uart_event *evt,
 		    void *user_data)
@@ -96,8 +100,9 @@ static void uart_cb(const struct device *dev, struct uart_event *evt,
 		k_sem_give(&out->tx_sem);
 		break;
 	case UART_RX_RDY:
+		// LOG_INF("UART RX-ready, len %d, %d", evt->data.rx.len, evt->data.rx.buf[evt->data.rx.offset]);
 		msg = midi_msg_alloc(NULL, 1);
-		memcpy(msg->data, evt->data.rx.buf, 1);
+		memcpy(msg->data, &evt->data.rx.buf[evt->data.rx.offset], 1);
 		msg->format = MIDI_FORMAT_1_0_SERIAL;
 		msg->len = 1;
 		msg->timestamp = MIDI_TIME_13BIT(k_ticks_to_ms_near64(k_uptime_ticks()));
@@ -111,17 +116,27 @@ static void uart_cb(const struct device *dev, struct uart_event *evt,
 		LOG_WRN("UART RX-disabled");
 		break;
 	case UART_RX_BUF_REQUEST:
-		if (released_buf == &in->rx_buffer[0]) {
-			uart_rx_buf_rsp(serial_dev_data->uart_dev, &in->rx_buffer[0], 1);
+	
+		// LOG_INF("UART RX-request");
+		// if (released_buf == &in->rx_buffer[0]) {
+		// 	uart_rx_buf_rsp(serial_dev_data->uart_dev, &in->rx_buffer[0], 1);
+		// } else {
+		// 	uart_rx_buf_rsp(serial_dev_data->uart_dev, &in->rx_buffer[1], 1);
+		// }		
+		if (released_buf == buffers[0]) {
+			uart_rx_buf_rsp(serial_dev_data->uart_dev, buffers[0], 16);
 		} else {
-			uart_rx_buf_rsp(serial_dev_data->uart_dev, &in->rx_buffer[1], 1);
+			uart_rx_buf_rsp(serial_dev_data->uart_dev, buffers[1], 16);
 		}
 		break;
 	case UART_RX_BUF_RELEASED:
+	// LOG_INF("UART RX-released");
 		released_buf = evt->data.rx_buf.buf;
+		// uart_rx_buf_rsp(serial_dev_data->uart_dev, released_buf, 16);
 		break;
 	case UART_RX_STOPPED:
-	// 	LOG_ERR("UART Rx stopped, reason %d", evt->data.rx_stop.reason);
+	// LOG_WRN("UART RX-stopped");
+		LOG_WRN("UART Rx stopped, reason %d", evt->data.rx_stop.reason);
 	// 	if ((evt->data.rx_stop.reason == 4) ||
 	// 	    (evt->data.rx_stop.reason == 8)) {
 	// 		/** UART might be disconnected, 
@@ -192,7 +207,7 @@ static int midi_serial_in_device_init(const struct device *dev)
 	if (err) {
 		return err;
 	}
-	err = uart_rx_enable(uart_dev, &serial_dev_data->in->rx_buffer[0], 1, SYS_FOREVER_MS);
+	err = uart_rx_enable(uart_dev, buffers[0], 16, 0);
 	if (err) {
 		return err;
 	}
@@ -243,6 +258,7 @@ void midi_rx_thread(struct midi_serial_dev_data *serial_dev_data)
 
 	for (;;) {
 		msg = k_fifo_get(&in->rx_queue, K_FOREVER);
+
 		
 		if(in->api->midi_transfer_done) {
 			in->api->midi_transfer_done(in->dev, msg, in->user_data);

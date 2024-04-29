@@ -17,7 +17,7 @@
 			low-power-enable;
 		};
 	};
-
+	
 	spi0_default: spi0_default {
 		group1 {
 			psels = <NRF_PSEL(SPIM_SCK, 0, 7)>,
@@ -40,32 +40,6 @@
 	current-speed = <31250>;
     pinctrl-0 = <&uart0_default>;
 	pinctrl-1 = <&uart0_sleep>;
-    midi_serial_device {
-        label = "SERIAL_MIDI";
-        compatible = "midi-serial-device";
-        midi_serial_in_device{
-            compatible = "midi-serial-in-device";
-            label = "SERIAL_MIDI_IN";
-        };
-    
-        midi_serial_out_device{
-            compatible = "midi-serial-out-device";
-            label = "SERIAL_MIDI_OUT";
-            handle-timestamps;
-        };
-    };
-
-};
-
-&radio{
-	midi_iso_device {
-		compatible = "midi-iso-device";
-		label = "ISO_MIDI";
-		midi_iso_broadcast_device {
-			label = "ISO_MIDI_RECEIVER";
-			compatible = "midi-iso-receiver-device";
-		};
-    };
 };
 
 &spi0{
@@ -75,3 +49,4 @@
 	
 	cs-gpios = <&gpio0 8 GPIO_ACTIVE_LOW>;
 };
+

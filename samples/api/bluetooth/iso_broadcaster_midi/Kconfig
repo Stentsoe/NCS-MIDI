@@ -1,0 +1,83 @@
+source "Kconfig.zephyr"
+
+config PRODUCT_ID
+    string "Product ID"
+    default "0x0001"
+    help
+      Product ID
+
+config MIDI_TEST_MODE
+	bool "Run sample in test mode"
+  default n
+
+if MIDI_TEST_MODE
+
+  config MIDI_TEST_MSG_NUM_INCREMENT
+    bool "Increment number of messages to send"
+    default n
+    help
+      Increment number of messages sent If enabled, the number of messages will increment from 1 to the value set in MIDI_TEST_MSG_NUM.
+  
+  config MIDI_TEST_MSG_NUM
+    int "Number of messages to send"
+    default 1 
+    default 2 if MIDI_TEST_2_MSG_500_INTERVAL
+    default 2 if MIDI_TEST_2_MSG_500_INTERVAL_1000_SPACING
+    default 2 if MIDI_TEST_2_MSG_500_INTERVAL_3000_SPACING
+    default 12 if MIDI_TEST_12_MSG_500_INTERVAL
+    help
+      Number of messages to send
+
+  config MIDI_TEST_MSG_INTERVAL_RANDOM
+    bool "Randomize interval between messages"
+    default n
+    help
+      Randomize interval between messages. If enabled, the interval will be a random value between 0 and the value set in MIDI_TEST_MSG_INTERVAL.
+
+  config MIDI_TEST_MSG_INTERVAL
+    int "Interval between clusters of messages (ms)"
+    default 500
+    help
+      Interval between messages
+
+  config MIDI_TEST_MSG_SPACING_RANDOM
+    bool "Randomize interval between messages"
+    default n
+    help
+      Randomize interval between messages. If enabled, the interval will be a random value between 0 and the value set in MIDI_TEST_MSG_SPACING.
+
+  config MIDI_TEST_MSG_SPACING
+    int "Spacing between single messages (us)"
+    default 0
+    default 1000 if MIDI_TEST_2_MSG_500_INTERVAL_1000_SPACING
+    default 3000 if MIDI_TEST_2_MSG_500_INTERVAL_3000_SPACING
+    help
+      Spacing between single messages
+
+  config MIDI_TEST_SYSEX
+    bool "Send sysex test message"
+    default n
+    help
+      Send sysex message
+
+  choice MIDI_TEST_CHOICE
+    prompt "Choose which test to run"
+    default MIDI_TEST_1_MSG_500_INTERVAL
+
+  config MIDI_TEST_1_MSG_500_INTERVAL
+    bool "Sends a single message with 500 interval"
+
+  config MIDI_TEST_2_MSG_500_INTERVAL
+    bool "Send two messages with steady interval"
+
+  config MIDI_TEST_2_MSG_500_INTERVAL_1000_SPACING
+    bool "Send two messages with steady interval and 1000 us spacing"
+
+  config MIDI_TEST_2_MSG_500_INTERVAL_3000_SPACING
+    bool "Send two messages with steady interval and 1000 us spacing"
+    
+  config MIDI_TEST_12_MSG_500_INTERVAL
+    bool "Send twelve messages with steady interval"
+
+  endchoice
+endif

@@ -1,2 +1,4 @@
 \build
 .vscode/settings.json
+\build_NRF52832
+\build_NRF52840

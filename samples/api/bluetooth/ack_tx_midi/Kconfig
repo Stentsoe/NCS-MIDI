@@ -1,0 +1,21 @@
+source "Kconfig.zephyr"
+
+config MIDI_TEST_MODE
+	bool "Run sample in test mode"
+  default n
+
+if MIDI_TEST_MODE
+
+config MIDI_TEST_ACK_DROPOUT_INTERVAL
+	int "Acknowledge dropout interval"
+    default 10 
+	default 8 if MIDI_TEST_DROP_EVERY_8TH
+	help
+	  Drop a MIDI acknowledge message every Nth message.
+
+choice MIDI_TEST_CHOICE
+	prompt "Acknowledge dropout interval"
+    config MIDI_TEST_DROP_8TH
+        bool "Drop every 8th ack message"
+endchoice
+endif # MIDI_TEST_MODE

@@ -19,16 +19,15 @@
 #include <zephyr/kernel.h>
 #include <zephyr/bluetooth/conn.h>
 
+#include "midi/midi_ump.h"
+
 #include <zephyr/device.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-
 typedef int (*midi_iso_synced)(struct bt_conn *conn, uint8_t conn_err);
-
-
 
 int midi_iso_register_connected_cb(midi_iso_synced cb);
 /**
@@ -61,7 +60,9 @@ int midi_iso_scan(const struct device *dev);
  */
 int midi_iso_disconnect(const struct device *dev);
 
+void midi_iso_set_function_block(midi_ump_function_block_t *function_block);
 
+void midi_iso_ack_msg(uint8_t muid, uint8_t msg_num);
 
 void print_test();
 #ifdef __cplusplus

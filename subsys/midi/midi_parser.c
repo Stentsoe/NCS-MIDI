@@ -37,7 +37,10 @@ static bool parse_serial_byte(uint16_t timestamp, uint8_t byte,
 		if ((byte >> 2) == 0b111101) {
 			if (byte == 0xF7) {
 				/** End of exclusive, not supported. Discarded for now.  */
-				return false;
+				memcpy(msg->data+msg->len, &byte, 1);
+				msg->len++;
+				parser->running_status = 0;
+				return true;
 			}
 			msg = midi_msg_alloc(msg, 1);
 			if(!msg) {
@@ -50,6 +53,19 @@ static bool parse_serial_byte(uint16_t timestamp, uint8_t byte,
 
 			return true;
 		}
+		if (byte == 0xF0) {
+			/** Start of system exclusive */
+			msg = midi_msg_alloc(msg, CONFIG_MIDI_PARSER_SYSEX_MAX_SIZE);
+			if(!msg) {
+				LOG_WRN("could not allocate midi buffer!");
+				return false;
+			}
+			
+			memcpy(msg->data, &byte, 1);
+			msg->len = 1;
+
+			return false;
+		}
 		return false;
 	}
 	if (parser->third_byte_flag == true) {
@@ -61,9 +77,10 @@ static bool parse_serial_byte(uint16_t timestamp, uint8_t byte,
 	}
 	if (running_status == 0) {
 		/** System Exclusive (SysEx) databytes, from 3rd byte until EoX, or
-		 * orphaned databytes. */
+		 * orphaned databytes */
 		return false;
 	}
+	
 	/** Channel Voice Messages */
 	switch (running_status >> 4) {
 	case 0x8:
@@ -125,7 +142,16 @@ static bool parse_serial_byte(uint16_t timestamp, uint8_t byte,
 		parser->running_status = 0;
 		return true;
 	case 0xF0:
-		break;
+		if (msg->len == CONFIG_MIDI_PARSER_SYSEX_MAX_SIZE) {
+			/** Discard message, buffer is full */
+			parser->running_status = 0;
+			LOG_ERR("Sysex message too long, discarding");
+			midi_msg_unref(msg);
+			return false;
+		}
+		memcpy(msg->data+msg->len, &byte, 1);
+		msg->len++;
+		return false;
 	}
 	parser->running_status = 0;
 	return false;
@@ -256,3 +282,7 @@ void midi_parser_reset(struct midi_serial_parser *parser)
     parser->running_status = 0;
     parser->third_byte_flag = false;
 }
+
+
+
+

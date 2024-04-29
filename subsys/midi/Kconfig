@@ -9,8 +9,17 @@
 config MIDI
 	bool "MIDI library"
 
-config MIDI_PARSER
+menuconfig MIDI_PARSER
 	bool "MIDI parser library"
+
+if MIDI_PARSER
+	config MIDI_PARSER_SYSEX_MAX_SIZE
+		int "Maximum size of sysex message"
+		default 255
+		help
+		  Maximum size of sysex message.
+
+endif # MIDI_PARSER
 
 config MIDI_SYNC
 	bool "MIDI sync library"
@@ -29,3 +38,38 @@ config MIDI_ISO_BROADCASTER
 
 config MIDI_ISO_RECEIVER
 	bool "MIDI iso receiver library"
+
+config MIDI_UMP
+	bool "MIDI ump library"
+
+config MIDI_SYSEX
+	bool "MIDI sysex library"
+
+config MIDI_CI
+	bool "MIDI ci library"
+	select MIDI_SYSEX
+
+menuconfig MIDI_ACK
+	bool "Enhanced ShockBurst"
+	select NRFX_PPI if HAS_HW_NRF_PPI
+	select NRFX_DPPI if HAS_HW_NRF_DPPIC
+	select MPSL
+	select MPSL_FEM_ONLY if !ESB_DYNAMIC_INTERRUPTS
+	select NRFX_TIMER2
+	default n
+	help
+	  Enable MIDI ACK functionality.
+
+if MIDI_ACK
+	config MIDI_ACK_RADIO_IRQ_PRIORITY
+		int "MIDI ACK radio IRQ priority"
+		default 1
+		range 0 5
+
+	config MIDI_ACK_EVENT_IRQ_PRIORITY
+		int "MIDI ACK radio IRQ priority"
+		default 2
+		range 0 5
+
+
+endif # MIDI_ACK
