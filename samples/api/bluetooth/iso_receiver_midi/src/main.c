@@ -27,6 +27,8 @@ const struct device *serial_midi_out_dev;
 const struct device *iso_midi_in_dev;
 const struct device *spi_dev;
 
+static K_FIFO_DEFINE(fifo_event_execution);
+
 #define UMP_NAME "nrf midi receiver"
 #define FUNCTION_BLOCK_NAME "receiver function block"
 
@@ -104,7 +106,7 @@ static int handle_midi_ci(midi_msg_t *msg)
 		LOG_INF("Remote function block added");
 		
 		reply_msg = midi_ci_discovery_reply_msg_create_alloc(&function_block, remote_function_block);
-		
+		// LOG_HEXDUMP_INF(reply_msg->data, reply_msg->len, "Reply message:");
 		spi_send(spi_dev, reply_msg->data, reply_msg->len);
 		midi_msg_unref(reply_msg);
 		break;
@@ -165,6 +167,7 @@ midi_msg_t * midi_ump_to_1_0(midi_msg_t *ump_msg)
 		msg = NULL;
 		break;
 	}
+	msg->timestamp = ump_msg->timestamp;
 	return msg;
 }
 
@@ -196,8 +199,16 @@ static int midi_iso_received(const struct device *dev,
 
 		if (msg->format == MIDI_FORMAT_2_0_UMP)
 		{
-			// midi_1_0_msg = midi_ump_to_1_0(msg);
-			// midi_send(serial_midi_out_dev, midi_1_0_msg);
+			if (msg->timestamp != 0)
+			{
+				// midi_msg_ref(msg);
+				// k_fifo_put(&fifo_event_execution, msg);
+				midi_1_0_msg = midi_ump_to_1_0(msg);
+				midi_send(serial_midi_out_dev, midi_1_0_msg);
+
+				
+			}
+			
 			if(msg->ack_channel != 0xFF)
 			{
 				spi_ack_msg[0] = 0xFF;
@@ -292,5 +303,26 @@ void main(void)
 	for (;;) {
 		dk_set_led(RUN_STATUS_LED, (++blink_status) % 2);
 		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
+	}
+}
+
+
+static void event_execution_thread_fn(void *p1, void *p2, void *p3);
+
+K_THREAD_DEFINE(event_execution_thread, 512, event_execution_thread_fn, 
+	NULL, NULL, NULL, K_PRIO_COOP(1), 0, 0);
+
+static void event_execution_thread_fn(void *p1, void *p2, void *p3)
+{
+	midi_msg_t *msg;
+	while (1)
+	{
+		msg = k_fifo_get(&fifo_event_execution, K_FOREVER);
+		if (msg)
+		{
+			k_sleep(K_USEC(msg->timestamp));
+			test_gpio_toggle(13);
+			midi_msg_unref_alt(msg);
+		}
 	}
 }

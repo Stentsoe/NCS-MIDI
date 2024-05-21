@@ -311,7 +311,8 @@ void midi_tx_thread(struct midi_serial_dev_data *serial_dev_data)
 		if (out->timestamp_setting == MIDI_TIMESTAMP_ON)
 		{
 			if (msg->format == MIDI_FORMAT_1_0_PARSED_DELTA_US) {
-				k_sleep(K_USEC(msg->timestamp));
+				k_sleep(K_USEC(msg->timestamp - (1000)));
+				LOG_INF("Timestamp: %d", msg->timestamp);
 			} else {
 				msg_delay = (int32_t)((msg->timestamp) -
 					(k_ticks_to_ms_near32((uint32_t)k_uptime_ticks()) % 8192));

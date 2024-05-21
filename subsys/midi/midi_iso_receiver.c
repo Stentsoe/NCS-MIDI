@@ -43,6 +43,8 @@ static uint8_t      per_sid;
 static uint32_t     per_interval_us;
 static uint32_t     iso_recv_count;
 
+uint8_t previous_msg_num = 0xFF;
+
 struct bt_le_per_adv_sync *sync;
 struct bt_iso_big *big;
 static struct bt_iso_big_sync_param big_sync_param;
@@ -353,9 +355,12 @@ static void iso_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info *in
 	uint16_t waited_time_sum = 0;
     midi_msg_t * parsed_msg;
 	uint8_t muid;
+	uint8_t current_msg_num = 0;
+	bool ump_received = false; 
+	
 
 	if (buf->len > 1) {
-		LOG_HEXDUMP_DBG(buf->data, buf->len, "ISO PDU");
+		LOG_HEXDUMP_INF(buf->data, buf->len, "ISO PDU");
 
 		buf_tail = net_buf_tail(buf) - 1;
 		pos = buf->data;
@@ -386,17 +391,30 @@ static void iso_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info *in
 			} else {
 				parsed_msg = parse_ump(buf, &pos, waited_time_sum, muid);
 				if (parsed_msg) {
+					waited_time_sum += parsed_msg->timestamp;
+					if (parsed_msg->num == previous_msg_num)
+					{
+						LOG_INF("Received duplicate message. Discarding.");
+						parsed_msg->timestamp = 0;
+					}
+					
+					ump_received = true;
+					current_msg_num = parsed_msg->num;
 					if(iso_dev_data->api->midi_transfer_done)  {
 						iso_dev_data->api->midi_transfer_done(
 								iso_dev_data->dev, parsed_msg, iso_dev_data->user_data);
 					} else {
-						midi_msg_unref(parsed_msg);
+						midi_msg_unref_alt(parsed_msg);
 					}
 				}
 			}
 		}
 	}
 
+	if (ump_received) 
+	{	
+		previous_msg_num = current_msg_num;
+	}
 	previous_seq_num = info->seq_num;
 	iso_recv_count++;
 }

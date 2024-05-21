@@ -45,7 +45,10 @@ const struct device *serial_midi_out_dev;
 const struct device *iso_midi_out_dev;
 const struct device *spi_dev;
 
-uint32_t remote_muid = 0;
+#define MAX_NUM_MUID 1
+// uint32_t remote_muid = 0;
+uint8_t num_muid = 0;
+uint32_t remote_muid[] = {0, 0};
 
 DEFINE_MIDI_PARSER_SERIAL(serial_parser);
 
@@ -102,12 +105,12 @@ midi_msg_t *midi_1_0_to_ump(midi_msg_t *msg, uint8_t channel)
 	case MIDI_OP_CONTROL_CHANGE:
 	case MIDI_OP_PITCH_BEND:
 		ump_msg = midi_ump_1_0_channel_voice_msg_create_alloc(0, status->opcode, 
-								channel, msg->data[1], msg->data[2], &remote_muid);
+								channel, msg->data[1], msg->data[2], &remote_muid[0]);
 		break;
 	case MIDI_OP_PROGRAM_CHANGE:
 	case MIDI_OP_CHANNEL_PRESSURE:
 		ump_msg = midi_ump_1_0_channel_voice_msg_create_alloc(0, status->opcode, 
-									channel, msg->data[1], 0, &remote_muid);
+									channel, msg->data[1], 0, &remote_muid[0]);
 		break;
 	default:
 		ump_msg = NULL;
@@ -181,15 +184,22 @@ static int handle_midi_ci(midi_msg_t *msg)
 		remote_function_block = midi_ci_parse_function_block_from_msg(msg);
 		err = midi_ump_add_remote_function_block(&function_block, remote_function_block);
 
-		k_sem_give(&device_discovered_sem);
-		remote_muid = remote_function_block->muid;
+		
+		remote_muid[num_muid] = remote_function_block->muid;
+		num_muid++;
+
 		LOG_INF("Remote function block added, %x", remote_function_block->muid);
+
+		if (num_muid == MAX_NUM_MUID)
+		{
+			LOG_INF("All devices discovered!");
+			k_sem_give(&device_discovered_sem);
+		}
+		
 		break;
-	
 	default:
 		break;
 	}
-	LOG_INF("sysex_header->sub_id_2: %x", header->universal_sysex_header.sub_id_2);
 
 	return err;
 }
@@ -198,7 +208,6 @@ static int handle_sysex(midi_msg_t *msg)
 {
 	midi_sysex_universal_msg_header_t *sysex_header;
 	sysex_header = midi_sysex_universal_msg_header_parse(msg);
-	LOG_INF("sysex_header->sub_id_1: %x", sysex_header->sub_id_1);
 	switch (sysex_header->sub_id_1)
 	{
 	case MIDI_SYSEX_SUB_ID_1_MIDI_CI:
@@ -323,53 +332,43 @@ void main(void)
 	for (;;) {
 		dk_set_led(RUN_STATUS_LED, (++blink_status) % 2);
 		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
-		if (remote_muid == 0)
+		if (num_muid < MAX_NUM_MUID)
 		{
+			LOG_INF("Sending discovery message");
 			msg_discovery = midi_msg_ref(msg_discovery);
 			midi_send(iso_midi_out_dev, msg_discovery);
 		}
 	}
 }
 
-#ifdef CONFIG_MIDI_TEST_MODE
+#if CONFIG_MIDI_TEST_MODE
 
 static void test_thread_fn(void *p1, void *p2, void *p3);
 
-K_THREAD_DEFINE(test_thread, 512,                                
-		test_thread_fn, NULL, NULL, NULL,
-		K_PRIO_COOP(1), 0, 0);
+K_THREAD_DEFINE(test_thread, 512, test_thread_fn, 
+	NULL, NULL, NULL, K_PRIO_COOP(1), 0, 0);
 
 static void test_thread_fn(void *p1, void *p2, void *p3)
 {
 	uint8_t msg_num = CONFIG_MIDI_TEST_MSG_NUM;
 	midi_msg_t *test_msg[CONFIG_MIDI_TEST_MSG_NUM];
 
-	#if CONFIG_MIDI_TEST_SYSEX
-	midi_msg_t *msg_discovery;
-
-	msg_discovery = midi_ci_discovery_msg_create_alloc(&function_block);
-	#endif /* CONFIG_MIDI_TEST_SYSEX */
-
-	for (size_t i = 0; i < CONFIG_MIDI_TEST_MSG_NUM; i++)
-	{
-		test_msg[i] = midi_ump_1_0_channel_voice_msg_create_alloc(0, MIDI_OP_NOTE_ON, 
-				0, 0x40, 0x020 + i, &remote_muid);
+	for (size_t i = 0; i < CONFIG_MIDI_TEST_MSG_NUM; i++) {
+		test_msg[i] = midi_ump_1_0_channel_voice_msg_create_alloc(0, 
+		MIDI_OP_NOTE_ON, 0, 0x40, 0x020 + i, &remote_muid[i % MAX_NUM_MUID]);
 	}
 
 	k_sem_take(&device_discovered_sem, K_FOREVER);
-	LOG_INF("Device discovered. Starting test!");
-	
 	while (1)
-	{
+	{	
+		#if CONFIG_MIDI_TEST_MSG_INTERVAL_RANDOM
+		k_sleep(K_MSEC(sys_rand32_get() % CONFIG_MIDI_TEST_MSG_INTERVAL));
+		#else
 		k_sleep(K_MSEC(CONFIG_MIDI_TEST_MSG_INTERVAL));
-		
-		#if CONFIG_MIDI_TEST_SYSEX
-		midi_send(iso_midi_out_dev, msg_discovery);
-		#endif /* CONFIG_MIDI_TEST_SYSEX */
+		#endif /* MIDI_TEST_MSG_INTERVAL_RANDOM */
 
 		#if CONFIG_MIDI_TEST_MSG_NUM_INCREMENT
-		if(msg_num == CONFIG_MIDI_TEST_MSG_NUM)
-		{
+		if(msg_num == CONFIG_MIDI_TEST_MSG_NUM) {
 			msg_num = 0;
 		}
 		msg_num++;	
@@ -378,7 +377,12 @@ static void test_thread_fn(void *p1, void *p2, void *p3)
 		for (int i = 0; i < msg_num; i++) {
 			test_msg[i] = midi_msg_ref(test_msg[i]);
 			midi_send(iso_midi_out_dev, test_msg[i]);
+			test_gpio_toggle(6);
+			#if CONFIG_MIDI_TEST_MSG_SPACING_RANDOM
+			k_sleep(K_USEC(sys_rand32_get() % CONFIG_MIDI_TEST_MSG_SPACING));
+			#else
 			k_sleep(K_USEC(CONFIG_MIDI_TEST_MSG_SPACING));
+			#endif /* MIDI_TEST_MSG_SPACING_RANDOM */
 		}
 	}
 }

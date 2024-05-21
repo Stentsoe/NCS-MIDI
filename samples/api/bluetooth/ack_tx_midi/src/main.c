@@ -173,39 +173,38 @@ int esb_tx_ack(uint8_t slice)
 	data = k_fifo_peek_head(&fifo_tx_ack);
 	if(data)
 	{
-
 		if (data->payload.data[3] == slice) {
 			data = k_fifo_get(&fifo_tx_ack, K_NO_WAIT);
 			if (data) {
-				LOG_HEXDUMP_DBG(data->payload.data, data->payload.length, "Tx ack:");
-				
+				LOG_INF("esb_tx_ack %p %d, %d", data, data->payload.length, dropout_counter % 2);
 				#if CONFIG_MIDI_TEST_MODE
-				LOG_INF("dropout counter: %d", dropout_counter);
-				if ((++dropout_counter) % CONFIG_MIDI_TEST_ACK_DROPOUT_INTERVAL != 0)
-				{
+				if (((++dropout_counter) % CONFIG_MIDI_TEST_ACK_DROPOUT_INTERVAL) != 0) {
+					LOG_INF("skjeeer");
+					err = gpio_pin_toggle(gpio_dev, 6);
+					if (err) {
+						LOG_ERR("GPIO_0 toggle error: %d", err);
+					}
 					err = esb_write_payload(&data->payload);
 					if (err) {
 						LOG_ERR("Payload write failed, err %d", err);
 						return err;
 					}
-				} else
-				{
-					LOG_INF("Dropping ack");
-					dropout_counter++;
-					err = gpio_pin_toggle(gpio_dev, 14);
+				} else {
+					LOG_INF("DROPPED ACK");
+				}
+
+				#else /* CONFIG_MIDI_TEST_MODE */
+				err = gpio_pin_toggle(gpio_dev, 6);
 					if (err) {
 						LOG_ERR("GPIO_0 toggle error: %d", err);
 					}
-
-				}
-				#else
-
 				err = esb_write_payload(&data->payload);
 				if (err) {
 					LOG_ERR("Payload write failed, err %d", err);
 					return err;
 				}
 				#endif /* CONFIG_MIDI_TEST_MODE */
+
 				k_free(data);
 			}
 		}
@@ -374,6 +373,13 @@ static int gpio_init(void)
 	}
 
 	err = gpio_pin_configure(gpio_dev, 13,
+				GPIO_OUTPUT | GPIO_ACTIVE_LOW);
+	if (err) {
+		LOG_ERR("GPIO_0 config error: %d", err);
+		return err;
+	}
+
+	err = gpio_pin_configure(gpio_dev, 6,
 				GPIO_OUTPUT | GPIO_ACTIVE_LOW);
 	if (err) {
 		LOG_ERR("GPIO_0 config error: %d", err);

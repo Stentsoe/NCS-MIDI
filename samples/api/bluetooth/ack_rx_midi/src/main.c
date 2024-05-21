@@ -10,6 +10,8 @@
 #include <esb.h>
 #include <zephyr/drivers/spi.h>
 
+#include <test_gpio.h>
+
 #include <zephyr/logging/log.h>
 
 #define LOG_MODULE_NAME ack_rx
@@ -20,6 +22,8 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define STACK_SIZE 512
 
 static K_FIFO_DEFINE(esb_spi_fifo);
+
+K_MEM_SLAB_DEFINE(rx_buf_slab, 64, 8, 4);
 
 #define SPI_NODE	DT_NODELABEL(spi0)
 
@@ -40,7 +44,7 @@ static int spi_send(const struct device *dev, void *data, size_t len)
 	};
 
 	struct spi_config config = (struct spi_config){
-		.frequency = 125000,
+		.frequency = 125000*2,
 		.operation = SPI_OP_MODE_MASTER | SPI_WORD_SET(8),
 		.slave = 0,
 		.cs = cs,
@@ -75,9 +79,10 @@ void esb_handler(struct esb_evt const *event)
 		LOG_DBG("TX FAILED EVENT");
 		break;
 	case ESB_EVENT_RX_RECEIVED:
-		data = k_malloc(sizeof(struct payload_data));
+		k_mem_slab_alloc(&rx_buf_slab, (void **)&data, K_NO_WAIT);
 		if (esb_read_rx_payload(&data->payload) == 0) {
-			LOG_HEXDUMP_INF(data->payload.data, data->payload.length, "RX:");
+			test_gpio_toggle(13);
+			// LOG_HEXDUMP_INF(data->payload.data, data->payload.length, "RX:");
 			k_fifo_put(&esb_spi_fifo, data);
 		} else {
 			LOG_ERR("Failed to read payload");
@@ -102,7 +107,8 @@ int midi_ack_initialize(void)
 	uint8_t addr_len = 2;
 
 	struct esb_config config = ESB_DEFAULT_CONFIG;
-
+	config.retransmit_delay = 0;
+	config.use_fast_ramp_up = true;
 	config.bitrate = ESB_BITRATE_2MBPS;	 
 	config.event_handler = esb_handler;
 	config.mode = ESB_MODE_PRX;
@@ -198,6 +204,10 @@ void main(void)
 		LOG_ERR("Cannot init LEDs (err: %d)", err);
 	}
 
+	test_gpio_init(13);
+	test_gpio_init(6);
+
+
 	err = esb_start_rx();
 	if (err) {
 		LOG_ERR("ESB start rx failed, err %d", err);
@@ -209,7 +219,7 @@ void main(void)
 		if (data) {
 			LOG_HEXDUMP_INF(data->payload.data, data->payload.length, "Tx loop:");
 			spi_send(spi_dev, data->payload.data, data->payload.length);
-			k_free(data);
+			k_mem_slab_free(&rx_buf_slab, (void *)data)
 		}
 		LOG_INF("running");
 	}

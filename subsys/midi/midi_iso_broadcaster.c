@@ -177,11 +177,10 @@ static int  send_to_iso_broadcaster_port(const struct device *dev,
 
 static void iso_dummy_work_handler(struct k_work *item)
 {
-	test_gpio_toggle(6);
+
 	
 	iso_tx_msg_list_resend(NULL);
 
-	test_gpio_toggle(6);
 }
 
 static int assign_ack_channel(uint8_t *ack_channels, uint8_t num_channels, void *muid)
@@ -289,7 +288,7 @@ void add_msg_to_payload(midi_msg_t *msg)
 
 	int lock = irq_lock();
 
-	test_gpio_toggle(6);
+
 
 	payload_ptr = payload_constructor.ptr;
 	len_field = payload_constructor.len_field;
@@ -333,14 +332,16 @@ void add_msg_to_payload(midi_msg_t *msg)
 		
 		payload_ptr ++;
 		memset(payload_ptr, assign_ack_channel(ack_channels, 5, msg->context), 1);
+		uint8_t ack_channel = *payload_ptr;
+
 		payload_ptr ++;
 		memcpy(payload_ptr, msg->data, msg->len);
 		payload_ptr += msg->len;
 	}
+
 	payload_constructor.ptr = payload_ptr;
 	payload_constructor.len_field = len_field;
 
-	test_gpio_toggle(6);
 	irq_unlock(lock);
 }
 
@@ -367,19 +368,15 @@ static void packet_thread_fn(void *p1, void *p2, void *p3)
 
 static int next_pdu_handler(uint8_t *payload)
 {
-	test_gpio_toggle(13);
 	payload_constructor.next_ptr = payload + 3;	
-	test_gpio_toggle(13);
 
 	return 0;
 }
 
 static int radio_pdu_handler(uint8_t *payload)
 {	
-
 	uint8_t len;
 	
-	test_gpio_toggle(13);
 
 	memset(ack_channels, 0, 5);
 	k_work_schedule_for_queue(&iso_work_q, &iso_dummy_work, 
@@ -395,7 +392,6 @@ static int radio_pdu_handler(uint8_t *payload)
 	payload_constructor.ref_time = k_ticks_to_us_floor64(k_uptime_ticks());
 	payload_constructor.previous_format = MIDI_FORMAT_2_0_UMP;
 	
-
 	len = payload_constructor.ptr - payload;
 
 	payload_constructor.ptr = payload_constructor.next_ptr;
@@ -410,9 +406,11 @@ static int radio_pdu_handler(uint8_t *payload)
 		{
 			msg_num = 0;
 		}
-		
+
 		if (len > 88) {
-			LOG_INF("SKJEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEER!!!!!!!!!!!! %d", len);
+			LOG_WRN("Packet length is excessive  %d", len);
+		} else {
+			// LOG_HEXDUMP_INF(payload, len, "TX:");
 		}
 	}
 
@@ -423,7 +421,7 @@ static void timer_handler(nrf_timer_event_t event_type, void *context)
 {
 	if (event_type == NRF_TIMER_EVENT_COMPARE1) 
 	{
-		test_gpio_toggle(13);
+
 		
 		nrf_timer_event_clear(timer.p_reg, NRF_TIMER_EVENT_COMPARE1);
 		
@@ -436,10 +434,10 @@ static void timer_handler(nrf_timer_event_t event_type, void *context)
 			LOG_ERR("Data buffer allocate timeout on channel isr");
 		}
 
-		dummy = 0;
+		dummy = 9;
 
 		net_buf_reserve(dummy_buf, BT_ISO_CHAN_SEND_RESERVE);
-		net_buf_add_mem(dummy_buf, &dummy, sizeof(dummy));
+		// net_buf_add_mem(dummy_buf, &dummy, sizeof(dummy));
 
 		err = bt_iso_chan_send(&bis_iso_chan[0], dummy_buf,
 							seq_num, BT_ISO_TIMESTAMP_NONE);
@@ -450,8 +448,6 @@ static void timer_handler(nrf_timer_event_t event_type, void *context)
 			return;
 		}
 		seq_num++;
-
-		test_gpio_toggle(13);
 	}
 
 	if (event_type == NRF_TIMER_EVENT_COMPARE2) 
