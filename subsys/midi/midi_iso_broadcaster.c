@@ -177,28 +177,23 @@ static int  send_to_iso_broadcaster_port(const struct device *dev,
 
 static void iso_dummy_work_handler(struct k_work *item)
 {
-
-	
 	iso_tx_msg_list_resend(NULL);
-
 }
 
 static int assign_ack_channel(uint8_t *ack_channels, uint8_t num_channels, void *muid)
 {
-
 	for (int i = 0; i < num_channels; i++)
 	{
-		if (ack_channels[i] == 0 )
-		{
+		if (ack_channels[i] == 0 ) {
 			ack_channels[i] = *(uint8_t *)muid;
 			return i;
 		}
-		if (ack_channels[i] == *(uint8_t *)muid)
-		{
+
+		if (ack_channels[i] == *(uint8_t *)muid){
 			return 0xFF;
 		}
-		
 	}
+
 	return 0xFF;
 }
 
@@ -288,8 +283,6 @@ void add_msg_to_payload(midi_msg_t *msg)
 
 	int lock = irq_lock();
 
-
-
 	payload_ptr = payload_constructor.ptr;
 	len_field = payload_constructor.len_field;
 	previous_format = payload_constructor.previous_format;
@@ -345,7 +338,6 @@ void add_msg_to_payload(midi_msg_t *msg)
 	irq_unlock(lock);
 }
 
-
 static void packet_thread_fn(void *p1, void *p2, void *p3)
 {
 	midi_msg_t *msg;
@@ -377,7 +369,6 @@ static int radio_pdu_handler(uint8_t *payload)
 {	
 	uint8_t len;
 	
-
 	memset(ack_channels, 0, 5);
 	k_work_schedule_for_queue(&iso_work_q, &iso_dummy_work, 
         K_USEC(big_create_param.interval-1500));
@@ -410,7 +401,7 @@ static int radio_pdu_handler(uint8_t *payload)
 		if (len > 88) {
 			LOG_WRN("Packet length is excessive  %d", len);
 		} else {
-			// LOG_HEXDUMP_INF(payload, len, "TX:");
+			LOG_HEXDUMP_INF(payload, len, "TX:");
 		}
 	}
 
@@ -421,23 +412,17 @@ static void timer_handler(nrf_timer_event_t event_type, void *context)
 {
 	if (event_type == NRF_TIMER_EVENT_COMPARE1) 
 	{
-
-		
 		nrf_timer_event_clear(timer.p_reg, NRF_TIMER_EVENT_COMPARE1);
 		
 		int err;
 		struct net_buf *dummy_buf;
-		uint8_t dummy;
 		
 		dummy_buf = net_buf_alloc(&bis_tx_pool, K_MSEC(BUF_ALLOC_TIMEOUT));
 		if (!dummy_buf) {
 			LOG_ERR("Data buffer allocate timeout on channel isr");
 		}
 
-		dummy = 9;
-
 		net_buf_reserve(dummy_buf, BT_ISO_CHAN_SEND_RESERVE);
-		// net_buf_add_mem(dummy_buf, &dummy, sizeof(dummy));
 
 		err = bt_iso_chan_send(&bis_iso_chan[0], dummy_buf,
 							seq_num, BT_ISO_TIMESTAMP_NONE);
@@ -500,7 +485,6 @@ static int midi_iso_broadcaster_device_init(const struct device *dev)
 
     k_work_init_delayable(&iso_dummy_work, iso_dummy_work_handler);
 
-
 	err = bt_enable(NULL);
 	if (err) {
 		LOG_ERR("Bluetooth unable to initialize (err: %d)", err);
@@ -554,8 +538,6 @@ static int midi_iso_broadcaster_device_init(const struct device *dev)
 	return 0;
 }
 
-
-
 #define DEFINE_MIDI_ISO_BROADCASTER_DEV_DATA(dev)				        \
     static struct midi_iso_broadcaster_dev_data midi_iso_broadcaster_dev_data_##dev;    \
 
@@ -583,4 +565,3 @@ static int midi_iso_broadcaster_device_init(const struct device *dev)
         
 
 LISTIFY(MIDI_ISO_DEVICE_COUNT, MIDI_ISO_BROADCASTER_DEVICE, ());
-

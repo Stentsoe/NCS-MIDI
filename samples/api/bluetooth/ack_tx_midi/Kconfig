@@ -13,9 +13,4 @@ config MIDI_TEST_ACK_DROPOUT_INTERVAL
 	help
 	  Drop a MIDI acknowledge message every Nth message.
 
-choice MIDI_TEST_CHOICE
-	prompt "Acknowledge dropout interval"
-    config MIDI_TEST_DROP_8TH
-        bool "Drop every 8th ack message"
-endchoice
 endif # MIDI_TEST_MODE

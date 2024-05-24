@@ -106,7 +106,6 @@ static int handle_midi_ci(midi_msg_t *msg)
 		LOG_INF("Remote function block added");
 		
 		reply_msg = midi_ci_discovery_reply_msg_create_alloc(&function_block, remote_function_block);
-		// LOG_HEXDUMP_INF(reply_msg->data, reply_msg->len, "Reply message:");
 		spi_send(spi_dev, reply_msg->data, reply_msg->len);
 		midi_msg_unref(reply_msg);
 		break;
@@ -199,14 +198,16 @@ static int midi_iso_received(const struct device *dev,
 
 		if (msg->format == MIDI_FORMAT_2_0_UMP)
 		{
-			if (msg->timestamp != 0)
+			if (msg->timestamp != 0xFF)
 			{
-				// midi_msg_ref(msg);
-				// k_fifo_put(&fifo_event_execution, msg);
+				midi_msg_ref(msg);
+				k_fifo_put(&fifo_event_execution, msg);
 				midi_1_0_msg = midi_ump_to_1_0(msg);
 				midi_send(serial_midi_out_dev, midi_1_0_msg);
 
 				
+			} else {
+				LOG_INF("Received duplicate message2!!!. Discarding.");
 			}
 			
 			if(msg->ack_channel != 0xFF)
@@ -306,11 +307,10 @@ void main(void)
 	}
 }
 
-
 static void event_execution_thread_fn(void *p1, void *p2, void *p3);
 
 K_THREAD_DEFINE(event_execution_thread, 512, event_execution_thread_fn, 
-	NULL, NULL, NULL, K_PRIO_COOP(1), 0, 0);
+	NULL, NULL, NULL, K_PRIO_PREEMPT(2), 0, 0);
 
 static void event_execution_thread_fn(void *p1, void *p2, void *p3)
 {

@@ -26,7 +26,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 #define SPI_NODE	DT_NODELABEL(spi0)
 
-#define _RADIO_SHORTS_COMMON                                                   \
+#define _RADIO_SHORTS_COMMON                                               \
 	(RADIO_SHORTS_READY_START_Msk | RADIO_SHORTS_END_DISABLE_Msk |         \
 	 RADIO_SHORTS_ADDRESS_RSSISTART_Msk |                                  \
 	 RADIO_SHORTS_DISABLED_RSSISTOP_Msk)
@@ -142,7 +142,12 @@ void random_delay_esb_send(struct payload_data *data)
 
 void ack_esb_send(struct payload_data *data)
 {
+	int err;
 	data->payload.length = 3;
+	// err = gpio_pin_toggle(gpio_dev, 6);
+	// if (err) {
+	// 	LOG_ERR("GPIO_0 toggle error: %d", err);
+	// }
 	k_fifo_put(&fifo_tx_ack, data);
 }
 
@@ -176,14 +181,10 @@ int esb_tx_ack(uint8_t slice)
 		if (data->payload.data[3] == slice) {
 			data = k_fifo_get(&fifo_tx_ack, K_NO_WAIT);
 			if (data) {
-				LOG_INF("esb_tx_ack %p %d, %d", data, data->payload.length, dropout_counter % 2);
 				#if CONFIG_MIDI_TEST_MODE
-				if (((++dropout_counter) % CONFIG_MIDI_TEST_ACK_DROPOUT_INTERVAL) != 0) {
-					LOG_INF("skjeeer");
-					err = gpio_pin_toggle(gpio_dev, 6);
-					if (err) {
-						LOG_ERR("GPIO_0 toggle error: %d", err);
-					}
+				if (((++dropout_counter) 
+							% CONFIG_MIDI_TEST_ACK_DROPOUT_INTERVAL) != 0) {
+
 					err = esb_write_payload(&data->payload);
 					if (err) {
 						LOG_ERR("Payload write failed, err %d", err);
@@ -191,13 +192,13 @@ int esb_tx_ack(uint8_t slice)
 					}
 				} else {
 					LOG_INF("DROPPED ACK");
-				}
-
-				#else /* CONFIG_MIDI_TEST_MODE */
-				err = gpio_pin_toggle(gpio_dev, 6);
+					err = gpio_pin_toggle(gpio_dev, 13);
 					if (err) {
 						LOG_ERR("GPIO_0 toggle error: %d", err);
 					}
+				}
+
+				#else /* CONFIG_MIDI_TEST_MODE */
 				err = esb_write_payload(&data->payload);
 				if (err) {
 					LOG_ERR("Payload write failed, err %d", err);
@@ -212,15 +213,18 @@ int esb_tx_ack(uint8_t slice)
 	return 0;
 }
 
-void tx_phase_timer(uint32_t phase_time, uint32_t slice_time, uint8_t num_slices, uint8_t num_phases)
+void tx_phase_timer(uint32_t phase_time, uint32_t slice_time, 
+						uint8_t num_slices, uint8_t num_phases)
 {
 	if (current_slice == 0)
 	{
 		if (current_phase < num_phases - 1)
 		{
-			nrfx_timer_compare(&time_slice_timer, NRF_TIMER_CC_CHANNEL1, get_time(phase_time), true);
+			nrfx_timer_compare(&time_slice_timer, NRF_TIMER_CC_CHANNEL1, 
+								get_time(phase_time), true);
 		}
-		nrfx_timer_compare(&time_slice_timer, NRF_TIMER_CC_CHANNEL2, get_time(slice_time), true);
+		nrfx_timer_compare(&time_slice_timer, NRF_TIMER_CC_CHANNEL2, 
+							get_time(slice_time), true);
 		current_slice++;
 	} else if (current_slice == num_slices - 1)
 	{
@@ -439,17 +443,11 @@ static void esb_tx_thread_fn(void *p1, void *p2, void *p3)
 	int err;
 
 	k_sem_take(&init_sem, K_FOREVER);
-
 	LOG_INF("esb_tx_thread_fn");
 
 	while (1)
 	{
 		k_sem_take(&esb_tx_sem, K_FOREVER);
-		err = gpio_pin_toggle(gpio_dev, 13);
-		if (err) {
-			LOG_ERR("GPIO_0 toggle error: %d", err);
-		}
-
 		switch (current_phase)
 		{
 		case 0:

@@ -38,31 +38,25 @@ config MIDI_TEST_DROP_SECOND_IRC_RATE
     help
       Drop second IRC rate
 
-# config MIDI_TEST_DROP_PACKET_RATE
-#     int "Drop packet rate"
-#     default 100
-#     help
-#       Drop packet rate
+config MIDI_TEST_DROP_THIRD_IRC
+    bool "Drop third irc"
+    default n
 
-choice MIDI_TEST_MODE_CHOICE
-    prompt "MIDI Test Mode Choice"
-    default MIDI_TEST_DROP_FIRST_16TH
-    config MIDI_TEST_DROP_FIRST_2ND
-        bool "Drop first immediate reptiotion transaction every 2nd packet"
-        select MIDI_TEST_DROP_FIRST_IRC
+config MIDI_TEST_DROP_THIRD_IRC_RATE
+    int "Drop third IRC rate"
+    depends on MIDI_TEST_DROP_THIRD_IRC
+    help
+      Drop third IRC rate
 
-    config MIDI_TEST_DROP_FIRST_16TH
-        bool "Drop first immediate reptiotion transaction every 16th packet"
-        select MIDI_TEST_DROP_FIRST_IRC
 
-    config MIDI_TEST_DROP_SECOND_2ND
-        bool "Drop second immediate reptiotion transaction every 2nd packet"
-        select MIDI_TEST_DROP_SECOND_IRC
+config MIDI_TEST_DROP_FOURTH_IRC
+    bool "Drop third irc"
+    default n
 
-    config MIDI_TEST_DROP_SECOND_16TH
-        bool "Drop second immediate reptiotion transaction every 16th packet"
-        select MIDI_TEST_DROP_SECOND_IRC
-
-endchoice
+config MIDI_TEST_DROP_FOURTH_IRC_RATE
+    int "Drop third IRC rate"
+    depends on MIDI_TEST_DROP_FOURTH_IRC
+    help
+      Drop fourth IRC rate
 
 endif # MIDI_TEST_MODE

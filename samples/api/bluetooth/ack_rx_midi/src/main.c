@@ -23,8 +23,6 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 static K_FIFO_DEFINE(esb_spi_fifo);
 
-K_MEM_SLAB_DEFINE(rx_buf_slab, 64, 8, 4);
-
 #define SPI_NODE	DT_NODELABEL(spi0)
 
 struct payload_data {
@@ -67,9 +65,8 @@ static int spi_send(const struct device *dev, void *data, size_t len)
 
 void esb_handler(struct esb_evt const *event)
 {
-	int err;
-	LOG_INF("esb_handler");
 	struct payload_data *data;
+	// test_gpio_toggle(13);
 	switch (event->evt_id)
 	{
 	case ESB_EVENT_TX_SUCCESS:
@@ -79,7 +76,7 @@ void esb_handler(struct esb_evt const *event)
 		LOG_DBG("TX FAILED EVENT");
 		break;
 	case ESB_EVENT_RX_RECEIVED:
-		k_mem_slab_alloc(&rx_buf_slab, (void **)&data, K_NO_WAIT);
+		data = k_malloc(sizeof(struct payload_data));
 		if (esb_read_rx_payload(&data->payload) == 0) {
 			test_gpio_toggle(13);
 			// LOG_HEXDUMP_INF(data->payload.data, data->payload.length, "RX:");
@@ -107,8 +104,6 @@ int midi_ack_initialize(void)
 	uint8_t addr_len = 2;
 
 	struct esb_config config = ESB_DEFAULT_CONFIG;
-	config.retransmit_delay = 0;
-	config.use_fast_ramp_up = true;
 	config.bitrate = ESB_BITRATE_2MBPS;	 
 	config.event_handler = esb_handler;
 	config.mode = ESB_MODE_PRX;
@@ -207,7 +202,6 @@ void main(void)
 	test_gpio_init(13);
 	test_gpio_init(6);
 
-
 	err = esb_start_rx();
 	if (err) {
 		LOG_ERR("ESB start rx failed, err %d", err);
@@ -219,7 +213,7 @@ void main(void)
 		if (data) {
 			LOG_HEXDUMP_INF(data->payload.data, data->payload.length, "Tx loop:");
 			spi_send(spi_dev, data->payload.data, data->payload.length);
-			k_mem_slab_free(&rx_buf_slab, (void *)data)
+			k_free(data);
 		}
 		LOG_INF("running");
 	}

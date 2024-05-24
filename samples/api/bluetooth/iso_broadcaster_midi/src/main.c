@@ -45,8 +45,7 @@ const struct device *serial_midi_out_dev;
 const struct device *iso_midi_out_dev;
 const struct device *spi_dev;
 
-#define MAX_NUM_MUID 1
-// uint32_t remote_muid = 0;
+#define MAX_NUM_MUID 2
 uint8_t num_muid = 0;
 uint32_t remote_muid[] = {0, 0};
 
@@ -241,7 +240,6 @@ static void rx_thread_fn(void *p1, void *p2, void *p3)
 
 			if (msg->data[0] == 0xFF)
 			{
-				// LOG_HEXDUMP_INF(msg->data, 3, "acked:");
 				midi_iso_ack_msg(msg->data[1], msg->data[2]);
 				LOG_INF("Ack msg received! muid: %x msg id: %x,", msg->data[1], msg->data[2]);
 			}
@@ -352,6 +350,8 @@ static void test_thread_fn(void *p1, void *p2, void *p3)
 {
 	uint8_t msg_num = CONFIG_MIDI_TEST_MSG_NUM;
 	midi_msg_t *test_msg[CONFIG_MIDI_TEST_MSG_NUM];
+	midi_ump_1_0_channel_voice_msg_t *msg_data;
+	uint8_t note_value = 0;
 
 	for (size_t i = 0; i < CONFIG_MIDI_TEST_MSG_NUM; i++) {
 		test_msg[i] = midi_ump_1_0_channel_voice_msg_create_alloc(0, 
@@ -361,23 +361,19 @@ static void test_thread_fn(void *p1, void *p2, void *p3)
 	k_sem_take(&device_discovered_sem, K_FOREVER);
 	while (1)
 	{	
+		note_value++;
 		#if CONFIG_MIDI_TEST_MSG_INTERVAL_RANDOM
 		k_sleep(K_MSEC(sys_rand32_get() % CONFIG_MIDI_TEST_MSG_INTERVAL));
 		#else
 		k_sleep(K_MSEC(CONFIG_MIDI_TEST_MSG_INTERVAL));
 		#endif /* MIDI_TEST_MSG_INTERVAL_RANDOM */
 
-		#if CONFIG_MIDI_TEST_MSG_NUM_INCREMENT
-		if(msg_num == CONFIG_MIDI_TEST_MSG_NUM) {
-			msg_num = 0;
-		}
-		msg_num++;	
-		#endif /* CONFIG_MIDI_TEST_MSG_NUM_INCREMENT */
-
 		for (int i = 0; i < msg_num; i++) {
+			msg_data = (midi_ump_1_0_channel_voice_msg_t*)test_msg[i]->data;
+			msg_data->channel_voice_msg.data_1 = note_value % 127;
 			test_msg[i] = midi_msg_ref(test_msg[i]);
 			midi_send(iso_midi_out_dev, test_msg[i]);
-			test_gpio_toggle(6);
+			
 			#if CONFIG_MIDI_TEST_MSG_SPACING_RANDOM
 			k_sleep(K_USEC(sys_rand32_get() % CONFIG_MIDI_TEST_MSG_SPACING));
 			#else
@@ -387,3 +383,4 @@ static void test_thread_fn(void *p1, void *p2, void *p3)
 	}
 }
 #endif /* CONFIG_MIDI_TEST_MODE */
+

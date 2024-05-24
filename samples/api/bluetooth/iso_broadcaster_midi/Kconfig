@@ -60,24 +60,5 @@ if MIDI_TEST_MODE
     help
       Send sysex message
 
-  choice MIDI_TEST_CHOICE
-    prompt "Choose which test to run"
-    default MIDI_TEST_1_MSG_500_INTERVAL
 
-  config MIDI_TEST_1_MSG_500_INTERVAL
-    bool "Sends a single message with 500 interval"
-
-  config MIDI_TEST_2_MSG_500_INTERVAL
-    bool "Send two messages with steady interval"
-
-  config MIDI_TEST_2_MSG_500_INTERVAL_1000_SPACING
-    bool "Send two messages with steady interval and 1000 us spacing"
-
-  config MIDI_TEST_2_MSG_500_INTERVAL_3000_SPACING
-    bool "Send two messages with steady interval and 1000 us spacing"
-    
-  config MIDI_TEST_12_MSG_500_INTERVAL
-    bool "Send twelve messages with steady interval"
-
-  endchoice
 endif

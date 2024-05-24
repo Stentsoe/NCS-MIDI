@@ -1,8 +1,4 @@
-/*
- * Copyright (c) 2020 Nordic Semiconductor ASA
- *
- * SPDX-License-Identifier: Apache-2.0
- */
+
 
 /**
  * @file
@@ -235,9 +231,7 @@ midi_msg_t * __must_check midi_msg_ref(midi_msg_t *msg);
 void midi_msg_unref(midi_msg_t *msg);
 void midi_msg_unref_alt(midi_msg_t *msg);
 
-// midi_msg_t * __must_check midi_msg_set(midi_msg_t *msg, uint8_t pos, uint8_t *data, size_t size)
 
-void test_func(void);
 
 #ifdef __cplusplus
 }

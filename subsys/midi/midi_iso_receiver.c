@@ -242,7 +242,6 @@ static void biginfo_cb(struct bt_le_per_adv_sync *sync,
 	       biginfo->framing ? "with" : "without",
 	       biginfo->encryption ? "" : "not ");
 
-
 	if (!big_synced) {
 		big_synced = true;
 		err = bt_iso_big_sync(sync, &big_sync_param, &big);
@@ -251,7 +250,6 @@ static void biginfo_cb(struct bt_le_per_adv_sync *sync,
 			return;
 		}
 	}
-    
 }
 
 static struct bt_le_per_adv_sync_cb sync_callbacks = {
@@ -391,15 +389,18 @@ static void iso_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info *in
 			} else {
 				parsed_msg = parse_ump(buf, &pos, waited_time_sum, muid);
 				if (parsed_msg) {
-					waited_time_sum += parsed_msg->timestamp;
-					if (parsed_msg->num == previous_msg_num)
+					waited_time_sum += (parsed_msg->timestamp);
+					LOG_INF("msg_num: %x, previous_msg_num: %x", parsed_msg->num, previous_msg_num);
+					if ((parsed_msg->num == previous_msg_num) || (parsed_msg->num == previous_msg_num - 1))
 					{
 						LOG_INF("Received duplicate message. Discarding.");
-						parsed_msg->timestamp = 0;
+						parsed_msg->timestamp = 0xFF;
+					} else {
+						ump_received = true;
+						current_msg_num = parsed_msg->num;
 					}
 					
-					ump_received = true;
-					current_msg_num = parsed_msg->num;
+
 					if(iso_dev_data->api->midi_transfer_done)  {
 						iso_dev_data->api->midi_transfer_done(
 								iso_dev_data->dev, parsed_msg, iso_dev_data->user_data);

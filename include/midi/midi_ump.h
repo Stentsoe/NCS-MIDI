@@ -176,7 +176,6 @@ typedef struct {
     uint8_t number_of_sysex_8_streams;
 } midi_ump_function_block_info_t;
 
-
 typedef struct {
     sys_snode_t node;
     const char *name;
@@ -200,7 +199,6 @@ typedef struct {
 typedef struct {
 	midi_ump_function_block_t *source;
 	midi_ump_function_block_t *dest;
-	// int64_t uptime;
 } midi_stream_t;
 
 typedef struct {
