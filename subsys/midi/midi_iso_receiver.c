@@ -356,14 +356,12 @@ static void iso_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info *in
 	uint8_t current_msg_num = 0;
 	bool ump_received = false; 
 	
-
 	if (buf->len > 1) {
 		LOG_HEXDUMP_INF(buf->data, buf->len, "ISO PDU");
 
 		buf_tail = net_buf_tail(buf) - 1;
 		pos = buf->data;
 		while(pos < buf_tail) {
-
 			muid = read_next_byte(buf, &pos);
 
 			if (muid == 0xFF) {
@@ -390,7 +388,6 @@ static void iso_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info *in
 				parsed_msg = parse_ump(buf, &pos, waited_time_sum, muid);
 				if (parsed_msg) {
 					waited_time_sum += (parsed_msg->timestamp);
-					LOG_INF("msg_num: %x, previous_msg_num: %x", parsed_msg->num, previous_msg_num);
 					if ((parsed_msg->num == previous_msg_num) || (parsed_msg->num == previous_msg_num - 1))
 					{
 						LOG_INF("Received duplicate message. Discarding.");

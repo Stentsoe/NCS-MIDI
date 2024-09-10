@@ -207,7 +207,7 @@ static int midi_iso_received(const struct device *dev,
 
 				
 			} else {
-				LOG_INF("Received duplicate message2!!!. Discarding.");
+				LOG_INF("Received duplicate message. Discarding.");
 			}
 			
 			if(msg->ack_channel != 0xFF)

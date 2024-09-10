@@ -48,7 +48,6 @@ K_THREAD_DEFINE(packet_thread, 512,
 static K_SEM_DEFINE(sem_big_cmplt, 0, 1);
 static K_SEM_DEFINE(sem_overflow_ctrl, 0, 1);
 
-static struct k_work_delayable iso_dummy_work;
 static struct k_work_delayable iso_resend_work;
 static struct k_work_q iso_work_q;
 
@@ -175,7 +174,7 @@ static int  send_to_iso_broadcaster_port(const struct device *dev,
 	return 0;
 }
 
-static void iso_dummy_work_handler(struct k_work *item)
+static void iso_resend_work_handler(struct k_work *item)
 {
 	iso_tx_msg_list_resend(NULL);
 }
@@ -370,7 +369,7 @@ static int radio_pdu_handler(uint8_t *payload)
 	uint8_t len;
 	
 	memset(ack_channels, 0, 5);
-	k_work_schedule_for_queue(&iso_work_q, &iso_dummy_work, 
+	k_work_schedule_for_queue(&iso_work_q, &iso_resend_work, 
         K_USEC(big_create_param.interval-1500));
 
 	nrfx_timer_clear(&timer);
@@ -434,11 +433,6 @@ static void timer_handler(nrf_timer_event_t event_type, void *context)
 		}
 		seq_num++;
 	}
-
-	if (event_type == NRF_TIMER_EVENT_COMPARE2) 
-	{
-		nrf_timer_event_clear(timer.p_reg, NRF_TIMER_EVENT_COMPARE2);
-	}
 }
 
 static int sys_timer_init(void)
@@ -476,14 +470,14 @@ static int midi_iso_broadcaster_device_init(const struct device *dev)
 	iso_dev_data->dev = dev;
 	iso_dev_data->api = (struct midi_api*)dev->api;
 
-	lll_adv_iso_radio_pdu_cb_set(radio_pdu_handler);
-	lll_adv_iso_radio_next_pdu_cb_set(next_pdu_handler);
+	ull_adv_iso_radio_pdu_cb_set(radio_pdu_handler);
+	ull_adv_iso_radio_next_pdu_cb_set(next_pdu_handler);
 
     k_work_queue_start(&iso_work_q, iso_work_q_stack_area,
             K_THREAD_STACK_SIZEOF(iso_work_q_stack_area), -2,
             NULL);
 
-    k_work_init_delayable(&iso_dummy_work, iso_dummy_work_handler);
+    k_work_init_delayable(&iso_resend_work, iso_resend_work_handler);
 
 	err = bt_enable(NULL);
 	if (err) {
